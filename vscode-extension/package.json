@@ -1,9 +1,22 @@
 {
-  "name": "mermaid-live-editor",
-  "displayName": "Mermaid Live Editor",
-  "description": "Offline drag-and-drop Mermaid diagram editor in a VSCode webview. Bundles Mermaid 10.9.0 — no network access required.",
-  "version": "0.1.0",
-  "publisher": "local",
+  "name": "mermaid-visual-editor",
+  "displayName": "Mermaid Visual Editor",
+  "description": "Offline drag-and-drop Mermaid diagram editor for VSCode — multi-sheet, edits .md / .mmd in place, exports SVG/PNG. Mermaid 10.9.0 bundled, no network access required.",
+  "version": "0.3.0",
+  "publisher": "NGPowerToys",
+  "author": {
+    "name": "NGPowerToys",
+    "email": "nextgenpowertoys@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NextGenPowerToys/mermaid-visual-editor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NextGenPowerToys/mermaid-visual-editor/issues"
+  },
+  "homepage": "https://github.com/NextGenPowerToys/mermaid-visual-editor#readme",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -16,36 +29,74 @@
     "diagram",
     "flowchart",
     "sequence diagram",
-    "offline"
+    "visual editor",
+    "offline",
+    "markdown"
   ],
   "main": "./extension.js",
   "activationEvents": [],
   "contributes": {
     "commands": [
       {
-        "command": "mermaidLiveEditor.open",
-        "title": "Open Live Editor",
+        "command": "mermaidVisualEditor.open",
+        "title": "Open Visual Editor",
         "category": "Mermaid"
       },
       {
-        "command": "mermaidLiveEditor.openWithSelection",
-        "title": "Open Live Editor with Selection",
+        "command": "mermaidVisualEditor.openWithSelection",
+        "title": "Open Visual Editor with Selection",
         "category": "Mermaid"
       },
       {
-        "command": "mermaidLiveEditor.insertIntoEditor",
+        "command": "mermaidVisualEditor.openFromFile",
+        "title": "Open Mermaid Diagrams from File",
+        "category": "Mermaid"
+      },
+      {
+        "command": "mermaidVisualEditor.insertIntoEditor",
         "title": "Insert Current Diagram into Active Editor",
+        "category": "Mermaid"
+      },
+      {
+        "command": "mermaidVisualEditor.saveBackToSource",
+        "title": "Save Diagram Back to Source File",
         "category": "Mermaid"
       }
     ],
     "menus": {
+      "explorer/context": [
+        {
+          "command": "mermaidVisualEditor.openFromFile",
+          "when": "resourceExtname == .mmd || resourceExtname == .mermaid || resourceExtname == .md || resourceExtname == .mdx || resourceExtname == .markdown",
+          "group": "navigation@50"
+        }
+      ],
       "editor/context": [
         {
-          "command": "mermaidLiveEditor.openWithSelection",
+          "command": "mermaidVisualEditor.openWithSelection",
           "when": "editorHasSelection",
           "group": "1_modification"
+        },
+        {
+          "command": "mermaidVisualEditor.openFromFile",
+          "when": "resourceExtname == .mmd || resourceExtname == .mermaid || resourceExtname == .md || resourceExtname == .mdx || resourceExtname == .markdown",
+          "group": "1_modification"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "mermaidVisualEditor.openFromFile",
+          "when": "resourceExtname == .mmd || resourceExtname == .mermaid || resourceExtname == .md || resourceExtname == .mdx || resourceExtname == .markdown"
         }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "command": "mermaidVisualEditor.saveBackToSource",
+        "key": "ctrl+s",
+        "mac": "cmd+s",
+        "when": "activeWebviewPanelId == 'mermaidVisualEditor'"
+      }
+    ]
   }
 }
