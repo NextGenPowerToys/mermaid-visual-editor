@@ -1,0 +1,51 @@
+{
+  "name": "mermaid-live-editor",
+  "displayName": "Mermaid Live Editor",
+  "description": "Offline drag-and-drop Mermaid diagram editor in a VSCode webview. Bundles Mermaid 10.9.0 — no network access required.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "mermaid",
+    "diagram",
+    "flowchart",
+    "sequence diagram",
+    "offline"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "mermaidLiveEditor.open",
+        "title": "Open Live Editor",
+        "category": "Mermaid"
+      },
+      {
+        "command": "mermaidLiveEditor.openWithSelection",
+        "title": "Open Live Editor with Selection",
+        "category": "Mermaid"
+      },
+      {
+        "command": "mermaidLiveEditor.insertIntoEditor",
+        "title": "Insert Current Diagram into Active Editor",
+        "category": "Mermaid"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "mermaidLiveEditor.openWithSelection",
+          "when": "editorHasSelection",
+          "group": "1_modification"
+        }
+      ]
+    }
+  }
+}
