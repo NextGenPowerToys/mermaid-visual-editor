@@ -86,6 +86,32 @@ function buildEditorHtml(context, initialCode, options) {
     '  var sheets = [];\n' +
     '  var activeIdx = 0;\n' +
     '  function defaultSheetName(i) { return "Sheet " + (i + 1); }\n' +
+    '\n' +
+    '  // The bundled HTML loads a starter template when the diagram-type combo\n' +
+    '  // fires `change`. Re-picking the SAME type never fires change, so on a\n' +
+    '  // brand-new empty sheet we swap the combo to a hidden placeholder. The\n' +
+    '  // user\'s next pick then always fires change → starter template loads.\n' +
+    '  function ensurePlaceholderTypeOption() {\n' +
+    '    var sel = document.getElementById("type");\n' +
+    '    if (!sel) return null;\n' +
+    '    var ph = sel.querySelector("option[data-vsx-placeholder]");\n' +
+    '    if (!ph) {\n' +
+    '      ph = document.createElement("option");\n' +
+    '      ph.setAttribute("data-vsx-placeholder", "1");\n' +
+    '      ph.value = "";\n' +
+    '      ph.textContent = "— Pick diagram type —";\n' +
+    '      ph.hidden = true;\n' +
+    '      sel.insertBefore(ph, sel.firstChild);\n' +
+    '    }\n' +
+    '    return ph;\n' +
+    '  }\n' +
+    '  function activatePlaceholderType() {\n' +
+    '    var sel = document.getElementById("type");\n' +
+    '    if (!sel) return;\n' +
+    '    ensurePlaceholderTypeOption();\n' +
+    '    sel.value = "";\n' +
+    '  }\n' +
+    '  function isSheetEmpty(s) { return !s || !s.code || !s.code.trim(); }\n' +
     '  function applyActiveSheetCode() {\n' +
     '    var el = getCodeEl();\n' +
     '    if (!el) { setTimeout(applyActiveSheetCode, 50); return; }\n' +
@@ -101,6 +127,7 @@ function buildEditorHtml(context, initialCode, options) {
     '    syncActiveSheetFromTextarea();\n' +
     '    activeIdx = i;\n' +
     '    applyActiveSheetCode();\n' +
+    '    if (isSheetEmpty(sheets[activeIdx])) activatePlaceholderType();\n' +
     '    renderTabs();\n' +
     '  }\n' +
     '  function addSheet() {\n' +
@@ -109,6 +136,7 @@ function buildEditorHtml(context, initialCode, options) {
     '    activeIdx = sheets.length - 1;\n' +
     '    var el = getCodeEl();\n' +
     '    if (el) { el.value = ""; fire(el); }\n' +
+    '    activatePlaceholderType();\n' +
     '    renderTabs();\n' +
     '  }\n' +
     '  function removeSheet(i) {\n' +
@@ -119,6 +147,7 @@ function buildEditorHtml(context, initialCode, options) {
     '    if (activeIdx >= sheets.length) activeIdx = sheets.length - 1;\n' +
     '    else if (activeIdx > i) activeIdx -= 1;\n' +
     '    applyActiveSheetCode();\n' +
+    '    if (isSheetEmpty(sheets[activeIdx])) activatePlaceholderType();\n' +
     '    renderTabs();\n' +
     '  }\n' +
     '  function renameSheet(i) {\n' +
