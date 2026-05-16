@@ -446,6 +446,15 @@
     border-color: var(--text-info) !important;
   }
   .modal-primary:hover { opacity: 0.9; }
+  .modal-danger {
+    background: transparent !important;
+    color: var(--text-danger) !important;
+    border-color: var(--text-danger) !important;
+    margin-right: auto;
+  }
+  .modal-danger:hover {
+    background: var(--bg-danger) !important;
+  }
 </style>
 </head>
 <body>
@@ -526,6 +535,7 @@
     <div class="modal-title" id="modal-title">Edit</div>
     <div class="modal-body" id="modal-body"></div>
     <div class="modal-actions">
+      <button class="icon-btn modal-danger" id="modal-delete" hidden>Delete</button>
       <button class="icon-btn" id="modal-cancel">Cancel</button>
       <button class="icon-btn modal-primary" id="modal-apply">Apply</button>
     </div>
@@ -3402,6 +3412,79 @@ function renameNode(oldId, newLabel, precomputedId) {
   setNodeLabel(newId, label);
 }
 
+// Delete a node and every line that mentions it. For class/ER nodes that
+// have a `{ ... }` member block, drop the whole block first; then strip any
+// remaining line that uses the id as a standalone identifier (which catches
+// declarations, edges, styles, and member references in other diagrams).
+function deleteNode(id) {
+  if (!id) return false;
+  if (typeof findMemberBlock === 'function') {
+    const blk = findMemberBlock(id);
+    if (blk) {
+      const code = codeEl.value;
+      let lineStart = blk.openIdx;
+      while (lineStart > 0 && code[lineStart - 1] !== '\n') lineStart--;
+      let lineEnd = blk.closeIdx + 1;
+      while (lineEnd < code.length && code[lineEnd] !== '\n') lineEnd++;
+      if (lineEnd < code.length) lineEnd++;
+      codeEl.value = code.slice(0, lineStart) + code.slice(lineEnd);
+    }
+  }
+  const idRe = new RegExp('(^|[^\\w])' + escForRegex(id) + '(?![\\w])');
+  // Always keep the first line (diagram header like `flowchart TD`) — the
+  // header can contain the id only by coincidence (e.g. a node named `TD`).
+  const lines = codeEl.value.split('\n');
+  const kept = lines.filter((line, i) => i === 0 || !idRe.test(line));
+  codeEl.value = kept.join('\n');
+  scheduleRender();
+  return true;
+}
+
+// Delete a single edge line connecting source ↔ target (in either order).
+// Removes the first matching line so multi-edge graphs strip exactly one
+// edge per call, mirroring how setEdge / readEdge target a single statement.
+//
+// Strategy: scan line by line. A line matches `a → b` when, after stripping
+// |label| segments (so identifiers that only appear inside a label don't
+// confuse us), `a` appears as a standalone token BEFORE `b`, and there's an
+// edge operator between them. We prefer source-then-target order, then fall
+// back to the reversed order — same dispatch setEdge uses, so the direction
+// the user clicked maps onto the right code line in multi-edge graphs.
+function deleteEdge(source, target) {
+  if (!source || !target) return false;
+  const ops = (typeof EDGE_OP === 'string')
+    ? EDGE_OP
+    : '(?:<-->|-->|---|--|==>|===|-\\.->|-\\.-|<\\|--|--\\|>|\\*--|--\\*|o--|--o)';
+  const edgeOpRe = new RegExp(ops);
+  function tryOrder(a, b) {
+    const aRe = new RegExp('(^|[^\\w])' + escForRegex(a) + '(?![\\w])');
+    const bRe = new RegExp('(^|[^\\w])' + escForRegex(b) + '(?![\\w])');
+    const lines = codeEl.value.split('\n');
+    let removed = false;
+    const kept = lines.filter((line, i) => {
+      if (removed || i === 0) return true; // never touch the header line
+      if (!edgeOpRe.test(line)) return true;
+      const bare = line.replace(/\|[^|]*\|/g, '');
+      const aHit = aRe.exec(bare);
+      const bHit = bRe.exec(bare);
+      if (!aHit || !bHit) return true;
+      const aIdx = aHit.index + aHit[1].length;
+      // Use lastIndexOf for b so a→b vs b→a is disambiguated correctly.
+      const bIdx = bare.lastIndexOf(b);
+      if (aIdx >= bIdx) return true;
+      const between = bare.slice(aIdx + a.length, bIdx);
+      if (!edgeOpRe.test(between)) return true;
+      removed = true;
+      return false;
+    });
+    if (!removed) return false;
+    codeEl.value = kept.join('\n');
+    scheduleRender();
+    return true;
+  }
+  return tryOrder(source, target) || tryOrder(target, source);
+}
+
 // ============================================================================
 // Member editing: ER entity attributes and class members (fields/methods).
 // ============================================================================
@@ -3991,7 +4074,9 @@ const modalTitle    = document.getElementById('modal-title');
 const modalBody     = document.getElementById('modal-body');
 const modalApply    = document.getElementById('modal-apply');
 const modalCancel   = document.getElementById('modal-cancel');
+const modalDelete   = document.getElementById('modal-delete');
 let modalOnApply = null;
+let modalOnDelete = null;
 
 // The modal normally lives at the end of <body>. When a dialog opens while
 // the canvas is in (native or CSS) fullscreen, that body-level node renders
@@ -4009,6 +4094,9 @@ function closeModal() {
   modalBackdrop.hidden = true;
   modalBody.innerHTML = '';
   modalOnApply = null;
+  modalOnDelete = null;
+  modalDelete.hidden = true;
+  modalDelete.textContent = 'Delete';
   // Return the modal to its original DOM home if it was relocated.
   if (modalHomeParent) {
     modalHomeParent.insertBefore(modalBackdrop, modalHomeNext);
@@ -4025,6 +4113,10 @@ document.addEventListener('keydown', (e) => {
 });
 modalApply.addEventListener('click', () => {
   if (modalOnApply) modalOnApply();
+  closeModal();
+});
+modalDelete.addEventListener('click', () => {
+  if (modalOnDelete) modalOnDelete();
   closeModal();
 });
 
@@ -4165,11 +4257,23 @@ function fieldList(labelText, columns, rows, addLabel) {
   };
 }
 
-function openModal(title, fields, onApply, focusField) {
+function openModal(title, fields, onApply, focusField, opts) {
   modalTitle.textContent = title;
   modalBody.innerHTML = '';
   fields.forEach(f => modalBody.appendChild(f.wrap));
   modalOnApply = onApply;
+
+  // Optional `opts.onDelete` shows a destructive "Delete" button (or whatever
+  // `opts.deleteLabel` overrides it with) on the left of the action bar.
+  const o = opts || {};
+  if (typeof o.onDelete === 'function') {
+    modalOnDelete = o.onDelete;
+    modalDelete.textContent = o.deleteLabel || 'Delete';
+    modalDelete.hidden = false;
+  } else {
+    modalOnDelete = null;
+    modalDelete.hidden = true;
+  }
 
   // If a fullscreen layer is active, relocate the modal inside it so it isn't
   // hidden behind the fullscreen element. Remember where to put it back.
@@ -4273,7 +4377,20 @@ function attachDoubleClick() {
                 statusEl.textContent = '';
             }, 2500);
           }
-        }, fields[0]);
+        }, fields[0], {
+          deleteLabel: `Delete ${titleFam}`,
+          onDelete: () => {
+            const ok = deleteEdge(edge.source, edge.target);
+            if (!ok) {
+              statusEl.textContent =
+                `couldn't locate ${edge.source}→${edge.target} in code`;
+              setTimeout(() => {
+                if (statusEl.textContent.startsWith("couldn't"))
+                  statusEl.textContent = '';
+              }, 2500);
+            }
+          },
+        });
       return;
     }
 
@@ -4326,6 +4443,9 @@ function attachDoubleClick() {
 
       const titleNode = fam === 'er' ? 'Edit entity'
                       : fam === 'class' ? 'Edit class' : 'Edit node';
+      const deleteLabel = fam === 'er' ? 'Delete entity'
+                        : fam === 'class' ? 'Delete class'
+                        : 'Delete node';
       openModal(titleNode, dlgFields, () => {
         const name = fName.get().trim();
         const willRename = !!name && name !== current;
@@ -4340,7 +4460,10 @@ function attachDoubleClick() {
         applyElementStyle(newId, {
           fill: fFill.get(), stroke: fStroke.get(), borderType: fBorder.get(),
         });
-      }, fName);
+      }, fName, {
+        deleteLabel,
+        onDelete: () => { deleteNode(nodeHit.id); },
+      });
       return;
     }
 
@@ -5095,6 +5218,49 @@ document.getElementById('download-png-btn').addEventListener('click', () => {
     }, 'image/png');
   };
   img.src = 'data:image/svg+xml;base64,' + svg64;
+});
+
+// ============================================================================
+// Keyboard delete: Backspace / Delete removes the currently-hovered node or
+// edge from the canvas (no double-click → modal round trip needed).
+// ============================================================================
+let _vsxHoverTarget = null;
+canvasWrap.addEventListener('mousemove', (e) => { _vsxHoverTarget = e.target; });
+canvasWrap.addEventListener('mouseleave', () => { _vsxHoverTarget = null; });
+
+function _vsxFlashStatus(text) {
+  if (!statusEl) return;
+  statusEl.textContent = text;
+  setTimeout(() => {
+    if (statusEl.textContent === text) statusEl.textContent = '';
+  }, 1500);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+  // Don't fight typing in the textarea, modal inputs, or contentEditable areas.
+  if (!modalBackdrop.hidden) return;
+  const a = document.activeElement;
+  if (a && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT' ||
+            a.tagName === 'SELECT' || a.isContentEditable)) return;
+  const target = _vsxHoverTarget;
+  if (!target) return;
+
+  // Edges first so relation clicks in class/ER aren't misclaimed as nodes.
+  const edge = (typeof edgeFromElement === 'function') ? edgeFromElement(target) : null;
+  if (edge) {
+    e.preventDefault();
+    const ok = deleteEdge(edge.source, edge.target);
+    _vsxFlashStatus(ok ? `removed ${edge.source}→${edge.target}`
+                       : `couldn't delete edge`);
+    return;
+  }
+  const node = (typeof nodeIdFromElement === 'function') ? nodeIdFromElement(target) : null;
+  if (node) {
+    e.preventDefault();
+    deleteNode(node.id);
+    _vsxFlashStatus(`removed ${node.id}`);
+  }
 });
 
 // ============================================================================
