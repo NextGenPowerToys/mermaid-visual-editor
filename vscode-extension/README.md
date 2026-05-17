@@ -15,9 +15,7 @@ A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
 ![Complex multi-cloud architecture diagram loaded for visual editing](media/screenshots/06-architecture.png)
 
-![Drag-and-drop a shape — Drop to add target appears](media/screenshots/02-drag-to-add.png)
-
-![After dropping — node added and Mermaid source updated in real time](media/screenshots/03-after-drop.png)
+![Drag-and-drop a shape — Drop to add target appears, source updates in real time](media/screenshots/02-drag-to-add.png)
 
 ![12+ diagram families in the type dropdown](media/screenshots/01-diagram-types.png)
 

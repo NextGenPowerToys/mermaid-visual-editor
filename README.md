@@ -21,9 +21,9 @@ A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
 | | |
 | --- | --- |
-| ![Drag-and-drop a shape](docs/screenshots/02-drag-to-add.png) | ![Node added, source updated](docs/screenshots/03-after-drop.png) |
-| ![12+ diagram families](docs/screenshots/01-diagram-types.png) | ![Edit-entity modal](docs/screenshots/07-er-editor.png) |
+| ![Drag-and-drop a shape with WYSIWYG source update](docs/screenshots/02-drag-to-add.png) | ![12+ diagram families](docs/screenshots/01-diagram-types.png) |
 | ![Right-click → Open Mermaid Diagrams from File](docs/screenshots/04-right-click-menu.png) | ![Thumbnail picker for multi-diagram files](docs/screenshots/05-picker.png) |
+| ![Edit-entity modal](docs/screenshots/07-er-editor.png) | |
 
 More on the [project site](https://nextgenpowertoys.github.io/mermaid-visual-editor/#screenshots).
 
