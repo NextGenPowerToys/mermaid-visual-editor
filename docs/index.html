@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Primary SEO -->
@@ -138,8 +137,8 @@
       position: sticky;
       top: 0;
       z-index: 10;
-      backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
     }
     nav.top .container { display: flex; align-items: center; justify-content: space-between; }
     nav.top .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text); }
@@ -243,6 +242,42 @@
     .feature h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
     .feature p { color: var(--text-soft); font-size: 14.5px; }
 
+    /* Screenshot gallery */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 18px;
+    }
+    .shot {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .shot:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent);
+    }
+    .shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #0e0e12;
+    }
+    .shot figcaption {
+      padding: 14px 18px;
+      color: var(--text-soft);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .shot figcaption strong { color: var(--text); font-weight: 600; display: block; margin-bottom: 2px; }
+    .shot.wide { grid-column: 1 / -1; }
+    @media (min-width: 900px) {
+      .shot.wide img { max-height: 720px; object-fit: contain; background: var(--bg-soft); }
+    }
+
     /* Use cases */
     .use-cases {
       display: grid;
@@ -287,6 +322,7 @@
       border-radius: var(--radius);
     }
     .install-card h3 { font-size: 16px; margin-bottom: 12px; }
+    .install-card p { color: var(--text-soft); font-size: 14.5px; }
     .install-card + .install-card { margin-top: 16px; }
 
     /* Footer */
@@ -321,6 +357,7 @@
     </a>
     <div class="links">
       <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
       <a href="#use-cases">Use cases</a>
       <a href="#commands">Commands</a>
       <a href="#install">Install</a>
@@ -431,6 +468,71 @@
   </div>
 </section>
 
+<section id="screenshots">
+  <div class="container">
+    <h2>See it in action</h2>
+    <p class="lede">Drag, double-click, edit, save back — all inside VSCode, all fully offline.</p>
+
+    <div class="gallery">
+      <figure class="shot wide">
+        <img src="screenshots/06-architecture.png" alt="Mermaid NG editing a complex multi-cloud architecture diagram with subgraphs for Internet, AWS, and Azure" loading="lazy" />
+        <figcaption>
+          <strong>Real-world diagrams, edited visually.</strong>
+          A multi-cloud Snowflake deployment loaded straight from <code>.mmd</code> — subgraphs, swimlane-style groupings, labelled edges and all.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="screenshots/02-drag-to-add.png" alt="Drag-and-drop in progress — a palette shape being dragged onto the canvas with a 'Drop to add' target highlighted" loading="lazy" />
+        <figcaption>
+          <strong>Drag-and-drop palette.</strong>
+          Grab a shape on the left, drop it on the canvas — or directly onto a subgraph to nest it.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="screenshots/03-after-drop.png" alt="After dropping a shape: the new node appears on the canvas and a matching declaration is appended to the Mermaid code below" loading="lazy" />
+        <figcaption>
+          <strong>WYSIWYG, two-way bound.</strong>
+          The new node shows up on the canvas and a matching <code>E[Process box]</code> line is appended to the source. Edit either side, the other updates.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="screenshots/01-diagram-types.png" alt="Diagram type dropdown open, showing Flowchart, Sequence, Class, State, Entity-Relationship, Gantt, Pie chart, User journey, Mindmap, Git graph, Timeline, and Quadrant" loading="lazy" />
+        <figcaption>
+          <strong>12+ diagram families.</strong>
+          Flowchart, sequence, class, state, ER, gantt, pie, journey, mindmap, gitgraph, timeline, quadrant — one editor, one shortcut.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="screenshots/04-right-click-menu.png" alt="VSCode explorer right-click context menu highlighting 'Open Mermaid Diagrams from File'" loading="lazy" />
+        <figcaption>
+          <strong>Right-click any <code>.md</code> / <code>.mmd</code> file.</strong>
+          Single-diagram files open straight into the editor; multi-diagram files first show a picker.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="screenshots/05-picker.png" alt="Thumbnail picker showing two rendered Mermaid diagrams (Diagram 1 flowchart and Diagram 2 sequence) with line numbers" loading="lazy" />
+        <figcaption>
+          <strong>Thumbnail picker for multi-diagram files.</strong>
+          Each diagram is rendered as a real SVG with its line number — click the one you want to edit, and every diagram in the file opens as a sheet.
+        </figcaption>
+      </figure>
+
+      <figure class="shot wide">
+        <img src="screenshots/07-er-editor.png" alt="Edit-entity modal for an ER diagram, with attribute list, key indicators (PK/FK/UK), border line, fill colour, border colour, and a destructive Delete entity button" loading="lazy" />
+        <figcaption>
+          <strong>Rich edit modal — and a clear Delete.</strong>
+          Every diagram family gets a family-aware modal: ER gets typed attributes with PK/FK/UK, class gets visibility-tagged members, edges get arrowheads and cardinalities. The red <strong>Delete</strong> action is unmistakable and fully undoable.
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
 <section class="alt" id="use-cases">
   <div class="container">
     <h2>Built for</h2>
@@ -526,7 +628,7 @@ code --install-extension mermaid-visual-editor-1.0.0.vsix</code></pre>
 
     <div class="install-card">
       <h3>For development</h3>
-      <p style="color: var(--text-soft); font-size: 14.5px;">
+      <p>
         Open <code>vscode-extension/</code> in VSCode and press <code>F5</code> to launch an Extension Development Host with the extension loaded.
       </p>
     </div>

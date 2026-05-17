@@ -11,6 +11,22 @@ A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
 ---
 
+## See it in action
+
+![Complex multi-cloud architecture diagram loaded for visual editing](media/screenshots/06-architecture.png)
+
+![Drag-and-drop a shape — Drop to add target appears](media/screenshots/02-drag-to-add.png)
+
+![After dropping — node added and Mermaid source updated in real time](media/screenshots/03-after-drop.png)
+
+![12+ diagram families in the type dropdown](media/screenshots/01-diagram-types.png)
+
+![Right-click any .md / .mmd file → Open Mermaid Diagrams from File](media/screenshots/04-right-click-menu.png)
+
+![Multi-diagram files show a thumbnail picker before opening](media/screenshots/05-picker.png)
+
+![Edit-entity modal with attributes, colours, borders, and a clear Delete action](media/screenshots/07-er-editor.png)
+
 ## Why Mermaid NG?
 
 Mermaid is the lingua franca for diagrams in modern engineering and AI workflows: it's text, so LLMs love it, Git diffs cleanly, and it renders everywhere — GitHub, GitLab, Notion, Obsidian, MkDocs, your own static site. But **writing the text by hand is slow** and **reading someone else's complex diagram is painful**.
