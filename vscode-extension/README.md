@@ -1,6 +1,6 @@
 # Mermaid NG — Visual Editor for VSCode
 
-![Mermaid NG — Visual Editor](media/icon-hd.png)
+![Mermaid NG — Visual Editor](https://raw.githubusercontent.com/NextGenPowerToys/mermaid-visual-editor/main/vscode-extension/media/icon-hd.png)
 
 > **WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams** — *what you see is what you get*. For software architects and developers who design systems faster when they can *see* what they're building. Multi-sheet, round-trips `.md` and `.mmd` files in place, exports SVG/PNG, and **runs fully offline** — Mermaid 10.9.0 is bundled, no network calls, no telemetry.
 
@@ -13,17 +13,17 @@ A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
 ## See it in action
 
-![Complex multi-cloud architecture diagram loaded for visual editing](media/screenshots/06-architecture.png)
+![Complex multi-cloud architecture diagram loaded for visual editing](https://raw.githubusercontent.com/NextGenPowerToys/mermaid-visual-editor/main/vscode-extension/media/screenshots/06-architecture.png)
 
-![Drag-and-drop a shape — Drop to add target appears, source updates in real time](media/screenshots/02-drag-to-add.png)
+![Drag-and-drop a shape — Drop to add target appears, source updates in real time](https://raw.githubusercontent.com/NextGenPowerToys/mermaid-visual-editor/main/vscode-extension/media/screenshots/02-drag-to-add.png)
 
-![12+ diagram families in the type dropdown](media/screenshots/01-diagram-types.png)
+![12+ diagram families in the type dropdown](https://raw.githubusercontent.com/NextGenPowerToys/mermaid-visual-editor/main/vscode-extension/media/screenshots/01-diagram-types.png)
 
-![Right-click any .md / .mmd file → Open Mermaid Diagrams from File](media/screenshots/04-right-click-menu.png)
+![Right-click any .md / .mmd file → Open Mermaid Diagrams from File](https://raw.githubusercontent.com/NextGenPowerToys/mermaid-visual-editor/main/vscode-extension/media/screenshots/04-right-click-menu.png)
 
-![Multi-diagram files show a thumbnail picker before opening](media/screenshots/05-picker.png)
+![Multi-diagram files show a thumbnail picker before opening](https://raw.githubusercontent.com/NextGenPowerToys/mermaid-visual-editor/main/vscode-extension/media/screenshots/05-picker.png)
 
-![Edit-entity modal with attributes, colours, borders, and a clear Delete action](media/screenshots/07-er-editor.png)
+![Edit-entity modal with attributes, colours, borders, and a clear Delete action](https://raw.githubusercontent.com/NextGenPowerToys/mermaid-visual-editor/main/vscode-extension/media/screenshots/07-er-editor.png)
 
 ## Why Mermaid NG?
 
