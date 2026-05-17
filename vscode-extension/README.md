@@ -1,6 +1,7 @@
-# Mermaid NG — Visual Editor for VSCode
+<!-- markdownlint-disable MD033 MD041 -->
+<img src="https://raw.githubusercontent.com/NextGenPowerToys/mermaid-visual-editor/main/vscode-extension/media/icon.png" align="right" width="128" alt="Mermaid NG icon" />
 
-![Mermaid NG — Visual Editor](https://raw.githubusercontent.com/NextGenPowerToys/mermaid-visual-editor/main/vscode-extension/media/icon-hd.png)
+# Mermaid NG — Visual Editor for VSCode
 
 > **WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams** — *what you see is what you get*. For software architects and developers who design systems faster when they can *see* what they're building. Multi-sheet, round-trips `.md` and `.mmd` files in place, exports SVG/PNG, and **runs fully offline** — Mermaid 10.9.0 is bundled, no network calls, no telemetry.
 
