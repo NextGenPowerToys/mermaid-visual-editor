@@ -247,29 +247,47 @@
     fill-opacity: 0.5 !important;
   }
 
-  /* Graph node interactivity: crosshair on hover indicates connectability.
-     Applies to all node/edge diagrams (flowchart, state, class, ER). */
-  .graph-mode g.node { cursor: crosshair; }
-  /* Edge / relation lines show a pointer so it's clear they're editable.
-     Widen the invisible hit area a touch so thin lines are easy to grab. */
+  /* Graph node interactivity: pointer cursor everywhere it's clickable so
+     it's obvious the user can act on the object (dbl-click to edit, drag to
+     connect, hover + Delete to remove). Applies to all node/edge diagrams. */
+  .graph-mode g.node,
+  .graph-mode g.node *,
+  .graph-mode g.statediagram-state,
+  .graph-mode g.statediagram-state *,
+  .graph-mode g.classGroup,
+  .graph-mode g.classGroup *,
+  .graph-mode g.er.entityBox,
+  .graph-mode g.er.entityBox * { cursor: pointer; }
+  /* Edge / relation lines show a pointer too. */
   .graph-mode .edgePaths path,
   .graph-mode g.edgePath path,
   .graph-mode path.relation,
   .graph-mode path.transition,
   .graph-mode path.relationshipLine { cursor: pointer; }
+  /* Edge labels are also clickable. */
+  .graph-mode .edgeLabel,
+  .graph-mode .edgeLabel *,
+  .graph-mode .relationshipLabel,
+  .graph-mode .relationshipLabel * { cursor: pointer; }
   /* When the pan tool is active, grab cursor wins over node/edge cursors */
   .canvas-wrap.hand-tool g.node,
+  .canvas-wrap.hand-tool g.node *,
   .canvas-wrap.hand-tool .edgePaths path,
   .canvas-wrap.hand-tool g.edgePath path,
   .canvas-wrap.hand-tool path.relation,
   .canvas-wrap.hand-tool path.transition,
-  .canvas-wrap.hand-tool path.relationshipLine { cursor: grab !important; }
+  .canvas-wrap.hand-tool path.relationshipLine,
+  .canvas-wrap.hand-tool .edgeLabel,
+  .canvas-wrap.hand-tool .edgeLabel * { cursor: grab !important; }
   .canvas-wrap.hand-tool.panning g.node,
+  .canvas-wrap.hand-tool.panning g.node *,
   .canvas-wrap.hand-tool.panning .edgePaths path,
   .canvas-wrap.hand-tool.panning g.edgePath path,
   .canvas-wrap.hand-tool.panning path.relation,
   .canvas-wrap.hand-tool.panning path.transition,
-  .canvas-wrap.hand-tool.panning path.relationshipLine { cursor: grabbing !important; }
+  .canvas-wrap.hand-tool.panning path.relationshipLine,
+  .canvas-wrap.hand-tool.panning .edgeLabel,
+  .canvas-wrap.hand-tool.panning .edgeLabel * { cursor: grabbing !important; }
   .graph-mode g.node:hover rect,
   .graph-mode g.node:hover polygon,
   .graph-mode g.node:hover circle,
@@ -328,6 +346,15 @@
   }
   .icon-btn:hover { background: var(--bg-secondary); color: var(--text-primary); border-color: var(--border); }
   .icon-btn:active { transform: scale(0.97); }
+  .icon-btn:disabled,
+  .icon-btn[disabled] {
+    cursor: default;
+    opacity: 0.35;
+    color: var(--text-tertiary);
+    background: none !important;
+    border-color: transparent !important;
+    transform: none !important;
+  }
   .header-actions { display: flex; gap: 4px; align-items: center; }
   .status { font-size: 11px; color: var(--text-tertiary); margin-right: 4px; }
 
@@ -447,14 +474,13 @@
   }
   .modal-primary:hover { opacity: 0.9; }
   .modal-danger {
-    background: transparent !important;
-    color: var(--text-danger) !important;
+    background: var(--text-danger) !important;
+    color: #ffffff !important;
     border-color: var(--text-danger) !important;
     margin-right: auto;
+    font-weight: 500;
   }
-  .modal-danger:hover {
-    background: var(--bg-danger) !important;
-  }
+  .modal-danger:hover { opacity: 0.9; }
 </style>
 </head>
 <body>
@@ -500,6 +526,8 @@
           <span>Canvas</span>
           <div class="header-actions">
             <span class="status" id="status"></span>
+            <button class="icon-btn" id="undo-btn" title="Undo  (⌘Z / Ctrl+Z)" disabled>↶</button>
+            <button class="icon-btn" id="redo-btn" title="Redo  (⇧⌘Z / Ctrl+Y)" disabled>↷</button>
             <button class="icon-btn" id="hand-btn" title="Pan tool — click and drag to move the canvas">✋</button>
             <button class="icon-btn" id="zoom-out-btn" title="Zoom out">−</button>
             <span class="status" id="zoom-level" style="min-width:38px;text-align:center;">100%</span>
@@ -542,6 +570,41 @@
   </div>
 </div>
 
+<!--
+================================================================================
+  Third-party attribution
+
+  This file bundles Mermaid 10.9.0 (https://github.com/mermaid-js/mermaid),
+  licensed under the MIT License. The full notice is reproduced below; the
+  original Mermaid bundle starts with the marker comment "mermaid 10.9.0" in
+  the first <script> block of this document.
+
+  The MIT License (MIT)
+
+  Copyright (c) 2014 - 2022 Knut Sveidqvist
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
+
+  Mermaid Visual Editor (the surrounding application code in this file) is
+  Copyright (c) 2026 NGPowerToys, also under the MIT License.
+================================================================================
+-->
 <script>
 /* mermaid 10.9.0 — inlined for fully offline use (no CDN/network) */
 (function(JM,Ag){typeof exports=="object"&&typeof module<"u"?module.exports=Ag():typeof define=="function"&&define.amd?define(Ag):(JM=typeof globalThis<"u"?globalThis:JM||self,JM.mermaid=Ag())})(this,function(){var FWe,RWe;"use strict";function JM(i){for(var s=[],u=1;u<arguments.length;u++)s[u-1]=arguments[u];var d=Array.from(typeof i=="string"?[i]:i);d[d.length-1]=d[d.length-1].replace(/\r?\n([\t ]*)$/,"");var p=d.reduce(function(y,T){var _=T.match(/\n([\t ]+|(?!\s).)/g);return _?y.concat(_.map(function(A){var P,R;return(R=(P=A.match(/[\t ]/g))===null||P===void 0?void 0:P.length)!==null&&R!==void 0?R:0})):y},[]);if(p.length){var v=new RegExp(`
@@ -4381,13 +4444,10 @@ function attachDoubleClick() {
           deleteLabel: `Delete ${titleFam}`,
           onDelete: () => {
             const ok = deleteEdge(edge.source, edge.target);
-            if (!ok) {
-              statusEl.textContent =
-                `couldn't locate ${edge.source}→${edge.target} in code`;
-              setTimeout(() => {
-                if (statusEl.textContent.startsWith("couldn't"))
-                  statusEl.textContent = '';
-              }, 2500);
+            if (ok) {
+              _vsxFlashStatus(`removed ${titleFam} ${edge.source}→${edge.target}`);
+            } else {
+              _vsxFlashStatus(`couldn't locate ${edge.source}→${edge.target}`);
             }
           },
         });
@@ -4462,7 +4522,10 @@ function attachDoubleClick() {
         });
       }, fName, {
         deleteLabel,
-        onDelete: () => { deleteNode(nodeHit.id); },
+        onDelete: () => {
+          deleteNode(nodeHit.id);
+          _vsxFlashStatus(`removed ${fam === 'er' ? 'entity' : fam === 'class' ? 'class' : 'node'} ${nodeHit.id}`);
+        },
       });
       return;
     }
@@ -5264,9 +5327,175 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================================================
+// Undo / Redo
+//   - snapshot of codeEl.value pushed on each meaningful mutation
+//   - user typing is debounced (one snapshot per ~500ms idle), programmatic
+//     edits (drag, modal apply, delete, reset, ...) snapshot immediately
+//   - per-sheet history is delegated to the bridge through __vsxUndoState
+//   - native textarea undo history is wiped by every programmatic value
+//     assignment, so we own Cmd/Ctrl+Z entirely
+// ============================================================================
+const _vsxUndoBtn = document.getElementById('undo-btn');
+const _vsxRedoBtn = document.getElementById('redo-btn');
+const UNDO_LIMIT  = 200;
+const UNDO_DEBOUNCE_MS = 500;
+
+let _vsxUndoStack    = [];
+let _vsxRedoStack    = [];
+let _vsxLastSnapshot = '';
+let _vsxTypingTimer  = null;
+let _vsxApplyingHistory = false;   // suppress snapshots during undo/redo restoration
+let _vsxSuppressNext = false;      // skip the next input event (used by bridge during sheet swaps)
+
+function _vsxUpdateUndoBtns() {
+  if (_vsxUndoBtn) _vsxUndoBtn.disabled = _vsxUndoStack.length === 0;
+  if (_vsxRedoBtn) _vsxRedoBtn.disabled = _vsxRedoStack.length === 0;
+}
+
+function _vsxFlushTypingTimer() {
+  if (_vsxTypingTimer) { clearTimeout(_vsxTypingTimer); _vsxTypingTimer = null; _vsxSnapshot(); }
+}
+
+function _vsxSnapshot() {
+  if (_vsxApplyingHistory) return;
+  const current = codeEl.value;
+  if (current === _vsxLastSnapshot) return;
+  _vsxUndoStack.push(_vsxLastSnapshot);
+  if (_vsxUndoStack.length > UNDO_LIMIT) _vsxUndoStack.shift();
+  _vsxRedoStack = [];
+  _vsxLastSnapshot = current;
+  _vsxUpdateUndoBtns();
+}
+
+function _vsxApplyValue(next) {
+  _vsxApplyingHistory = true;
+  codeEl.value = next;
+  codeEl.dispatchEvent(new Event('input', { bubbles: true }));
+  _vsxLastSnapshot = next;
+  _vsxApplyingHistory = false;
+  _vsxUpdateUndoBtns();
+}
+
+function vsxUndo() {
+  _vsxFlushTypingTimer();
+  if (_vsxUndoStack.length === 0) return;
+  _vsxRedoStack.push(codeEl.value);
+  if (_vsxRedoStack.length > UNDO_LIMIT) _vsxRedoStack.shift();
+  _vsxApplyValue(_vsxUndoStack.pop());
+}
+
+function vsxRedo() {
+  _vsxFlushTypingTimer();
+  if (_vsxRedoStack.length === 0) return;
+  _vsxUndoStack.push(codeEl.value);
+  if (_vsxUndoStack.length > UNDO_LIMIT) _vsxUndoStack.shift();
+  _vsxApplyValue(_vsxRedoStack.pop());
+}
+
+codeEl.addEventListener('input', (e) => {
+  if (_vsxApplyingHistory) return;
+  if (_vsxSuppressNext) {
+    _vsxSuppressNext = false;
+    _vsxLastSnapshot = codeEl.value;
+    return;
+  }
+  if (e.isTrusted) {
+    // User typing: debounce so each keystroke isn't its own undo step.
+    if (_vsxTypingTimer) clearTimeout(_vsxTypingTimer);
+    _vsxTypingTimer = setTimeout(() => {
+      _vsxTypingTimer = null;
+      _vsxSnapshot();
+    }, UNDO_DEBOUNCE_MS);
+  } else {
+    // Programmatic mutation that already dispatches input — snapshot now.
+    _vsxFlushTypingTimer();
+    _vsxSnapshot();
+  }
+});
+
+// Most programmatic mutations (drag-to-connect, modal Apply, deleteNode/Edge,
+// reset, palette drops, ...) assign codeEl.value directly and call
+// scheduleRender() WITHOUT dispatching an input event, which means the input
+// listener above never sees them. Wrap scheduleRender so each call also
+// queues a snapshot — deferred to a microtask so a burst of calls within one
+// tick collapses to a single undo step, and skipped while typing debounce is
+// in flight (the typing path will snapshot through that timer).
+let _vsxSnapshotQueued = false;
+const _vsxOriginalScheduleRender = scheduleRender;
+scheduleRender = function () {
+  _vsxOriginalScheduleRender.apply(this, arguments);
+  if (_vsxApplyingHistory || _vsxSuppressNext) return;
+  if (_vsxSnapshotQueued) return;
+  _vsxSnapshotQueued = true;
+  // Defer to a microtask so a burst of sync calls collapses to one snapshot.
+  // Re-check typingTimer INSIDE the microtask: the input listener that sets
+  // it runs after the rendering listener that triggered scheduleRender, so
+  // its presence by the time the microtask fires means typing is in flight
+  // and the debounced snapshot will own this edit.
+  queueMicrotask(() => {
+    _vsxSnapshotQueued = false;
+    if (_vsxApplyingHistory || _vsxSuppressNext || _vsxTypingTimer) return;
+    _vsxSnapshot();
+  });
+};
+
+if (_vsxUndoBtn) _vsxUndoBtn.addEventListener('click', vsxUndo);
+if (_vsxRedoBtn) _vsxRedoBtn.addEventListener('click', vsxRedo);
+
+document.addEventListener('keydown', (e) => {
+  if (!modalBackdrop.hidden) return;
+  const mod = e.metaKey || e.ctrlKey;
+  if (!mod) return;
+  const k = e.key.toLowerCase();
+  if (k === 'z') {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.shiftKey) vsxRedo(); else vsxUndo();
+  } else if (k === 'y' && !e.shiftKey) {
+    // Windows-style redo (Ctrl+Y).
+    e.preventDefault();
+    e.stopPropagation();
+    vsxRedo();
+  }
+}, true);
+
+// Bridge API: each sheet stores its own undo state on tab switch, so undos
+// don't cross sheet boundaries.
+window.__vsxGetUndoState = function () {
+  _vsxFlushTypingTimer();
+  return {
+    undoStack: _vsxUndoStack.slice(),
+    redoStack: _vsxRedoStack.slice(),
+    lastSnapshot: _vsxLastSnapshot,
+  };
+};
+window.__vsxSetUndoState = function (state) {
+  if (_vsxTypingTimer) { clearTimeout(_vsxTypingTimer); _vsxTypingTimer = null; }
+  if (state && Array.isArray(state.undoStack)) {
+    _vsxUndoStack = state.undoStack.slice();
+    _vsxRedoStack = Array.isArray(state.redoStack) ? state.redoStack.slice() : [];
+    _vsxLastSnapshot = typeof state.lastSnapshot === 'string'
+      ? state.lastSnapshot : codeEl.value;
+  } else {
+    _vsxUndoStack = [];
+    _vsxRedoStack = [];
+    _vsxLastSnapshot = codeEl.value;
+  }
+  _vsxUpdateUndoBtns();
+};
+window.__vsxSuppressNextInput = function () { _vsxSuppressNext = true; };
+
+// ============================================================================
 // Init
 // ============================================================================
 loadType('flowchart');
+// Re-baseline the history: loadType fires an input event that would have
+// snapshotted the previous empty value onto the undo stack — wipe it so the
+// user starts with a clean history rooted at whatever's currently visible.
+_vsxUndoStack = [];
+_vsxRedoStack = [];
+_vsxLastSnapshot = codeEl.value;
+_vsxUpdateUndoBtns();
 </script>
 
 </body>

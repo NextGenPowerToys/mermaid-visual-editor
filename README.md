@@ -37,4 +37,8 @@ Or open `vscode-extension/` in VSCode and press `F5` to launch an extension dev 
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+This project's source code is licensed under the MIT License — see [LICENSE](LICENSE).
+
+## Third-party
+
+This project bundles [Mermaid](https://github.com/mermaid-js/mermaid) (v10.9.0), © 2014–2022 Knut Sveidqvist, also under the MIT License. Full text in [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES); a copy is also embedded as an HTML comment inside [vscode-extension/media/mermaid-editor.html](vscode-extension/media/mermaid-editor.html) so the editor file remains compliant when distributed as a standalone document.

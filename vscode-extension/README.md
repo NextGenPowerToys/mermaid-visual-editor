@@ -103,4 +103,8 @@ vscode-extension/
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+This extension's source code is licensed under the MIT License — see [LICENSE](LICENSE).
+
+## Third-party
+
+This extension bundles [Mermaid](https://github.com/mermaid-js/mermaid) (v10.9.0), © 2014–2022 Knut Sveidqvist, also under the MIT License. Full text in [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES); a copy is also embedded as an HTML comment inside [media/mermaid-editor.html](media/mermaid-editor.html).

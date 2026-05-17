@@ -20,8 +20,14 @@ function readEditorHtml(context) {
 // The first <script> in the page is the Mermaid 10.9.0 UMD bundle. We pull
 // it out so the thumbnail picker can reuse the exact same code path without
 // shipping a second copy on disk.
+//
+// The marker we look for is the specific inline comment that lives on line 1
+// of the bundle script — `/* mermaid 10.9.0 — inlined for fully offline use`.
+// The string "mermaid 10.9.0" also appears in this file's third-party
+// attribution comment, so a loose marker would point us at the wrong block.
 function extractMermaidBundle(html) {
-  const markerIdx = html.indexOf('mermaid 10.9.0');
+  const BUNDLE_MARKER = '/* mermaid 10.9.0 — inlined for fully offline use';
+  const markerIdx = html.indexOf(BUNDLE_MARKER);
   let open, close;
   if (markerIdx !== -1) {
     open = html.lastIndexOf('<script>', markerIdx);
@@ -122,20 +128,42 @@ function buildEditorHtml(context, initialCode, options) {
     '    var el = getCodeEl();\n' +
     '    if (el && sheets[activeIdx]) sheets[activeIdx].code = el.value;\n' +
     '  }\n' +
+    '  // Save the current sheet\'s undo history onto the sheet object so that\n' +
+    '  // when we come back to it Cmd+Z keeps working where the user left off.\n' +
+    '  function stashUndoState(idx) {\n' +
+    '    if (sheets[idx] && typeof window.__vsxGetUndoState === "function") {\n' +
+    '      sheets[idx]._undo = window.__vsxGetUndoState();\n' +
+    '    }\n' +
+    '  }\n' +
+    '  function restoreUndoState(idx) {\n' +
+    '    if (typeof window.__vsxSetUndoState === "function") {\n' +
+    '      window.__vsxSetUndoState((sheets[idx] && sheets[idx]._undo) || null);\n' +
+    '    }\n' +
+    '  }\n' +
+    '  function suppressNextSnapshot() {\n' +
+    '    if (typeof window.__vsxSuppressNextInput === "function") window.__vsxSuppressNextInput();\n' +
+    '  }\n' +
+    '\n' +
     '  function switchSheet(i) {\n' +
     '    if (i === activeIdx || i < 0 || i >= sheets.length) return;\n' +
     '    syncActiveSheetFromTextarea();\n' +
+    '    stashUndoState(activeIdx);\n' +
     '    activeIdx = i;\n' +
+    '    suppressNextSnapshot();\n' +
     '    applyActiveSheetCode();\n' +
+    '    restoreUndoState(activeIdx);\n' +
     '    if (isSheetEmpty(sheets[activeIdx])) activatePlaceholderType();\n' +
     '    renderTabs();\n' +
     '  }\n' +
     '  function addSheet() {\n' +
     '    syncActiveSheetFromTextarea();\n' +
+    '    stashUndoState(activeIdx);\n' +
     '    sheets.push({ name: defaultSheetName(sheets.length), code: "" });\n' +
     '    activeIdx = sheets.length - 1;\n' +
+    '    suppressNextSnapshot();\n' +
     '    var el = getCodeEl();\n' +
     '    if (el) { el.value = ""; fire(el); }\n' +
+    '    restoreUndoState(activeIdx);\n' +
     '    activatePlaceholderType();\n' +
     '    renderTabs();\n' +
     '  }\n' +
@@ -143,10 +171,13 @@ function buildEditorHtml(context, initialCode, options) {
     '    if (sheets.length <= 1) return;\n' +
     '    if (!window.confirm("Remove sheet \\"" + sheets[i].name + "\\"?")) return;\n' +
     '    syncActiveSheetFromTextarea();\n' +
+    '    stashUndoState(activeIdx);\n' +
     '    sheets.splice(i, 1);\n' +
     '    if (activeIdx >= sheets.length) activeIdx = sheets.length - 1;\n' +
     '    else if (activeIdx > i) activeIdx -= 1;\n' +
+    '    suppressNextSnapshot();\n' +
     '    applyActiveSheetCode();\n' +
+    '    restoreUndoState(activeIdx);\n' +
     '    if (isSheetEmpty(sheets[activeIdx])) activatePlaceholderType();\n' +
     '    renderTabs();\n' +
     '  }\n' +
@@ -230,11 +261,17 @@ function buildEditorHtml(context, initialCode, options) {
     '        });\n' +
     '      }\n' +
     '      activeIdx = Math.max(0, Math.min(INITIAL_ACTIVE_IDX | 0, sheets.length - 1));\n' +
+    '      // Skip the initial-load snapshot so undo doesn\'t step back to the\n' +
+    '      // bundled HTML\'s default starter the user never asked for.\n' +
+    '      if (typeof window.__vsxSuppressNextInput === "function") window.__vsxSuppressNextInput();\n' +
     '      applyActiveSheetCode();\n' +
+    '      if (typeof window.__vsxSetUndoState === "function") window.__vsxSetUndoState(null);\n' +
     '    } else if (initialCode) {\n' +
     '      sheets.push({ name: defaultSheetName(0), code: initialCode });\n' +
     '      activeIdx = 0;\n' +
+    '      if (typeof window.__vsxSuppressNextInput === "function") window.__vsxSuppressNextInput();\n' +
     '      applyActiveSheetCode();\n' +
+    '      if (typeof window.__vsxSetUndoState === "function") window.__vsxSetUndoState(null);\n' +
     '    } else {\n' +
     '      // No preset: let the bundled HTML populate its default starter.\n' +
     '      // Snapshot whatever the textarea ends up with into sheet 1.\n' +
