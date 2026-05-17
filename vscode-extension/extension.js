@@ -17,16 +17,15 @@ function readEditorHtml(context) {
   return fs.readFileSync(htmlPath, 'utf8');
 }
 
-// The first <script> in the page is the Mermaid 10.9.0 UMD bundle. We pull
+// The first <script> in the page is the Mermaid UMD bundle. We pull
 // it out so the thumbnail picker can reuse the exact same code path without
 // shipping a second copy on disk.
 //
 // The marker we look for is the specific inline comment that lives on line 1
-// of the bundle script — `/* mermaid 10.9.0 — inlined for fully offline use`.
-// The string "mermaid 10.9.0" also appears in this file's third-party
-// attribution comment, so a loose marker would point us at the wrong block.
+// of the bundle script — `inlined for fully offline use`. It is version-
+// independent so bumping the Mermaid version doesn't silently break this.
 function extractMermaidBundle(html) {
-  const BUNDLE_MARKER = '/* mermaid 10.9.0 — inlined for fully offline use';
+  const BUNDLE_MARKER = 'inlined for fully offline use';
   const markerIdx = html.indexOf(BUNDLE_MARKER);
   let open, close;
   if (markerIdx !== -1) {

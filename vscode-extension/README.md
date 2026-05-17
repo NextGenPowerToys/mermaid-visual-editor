@@ -3,13 +3,13 @@
 
 # Mermaid NG — Visual Editor for VSCode
 
-> **WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams** — *what you see is what you get*. For software architects and developers who design systems faster when they can *see* what they're building. Multi-sheet, round-trips `.md` and `.mmd` files in place, exports SVG/PNG, and **runs fully offline** — Mermaid 10.9.0 is bundled, no network calls, no telemetry.
+> **WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams** — *what you see is what you get*. For software architects and developers who design systems faster when they can *see* what they're building. Multi-sheet, round-trips `.md` and `.mmd` files in place, exports SVG/PNG, and **runs fully offline** — Mermaid 11.15.0 is bundled, no network calls, no telemetry.
 
 A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
 **What's new in 1.1.0** — Azure DevOps Wiki `::: mermaid ... :::` container syntax, plus a new project site, screenshot gallery, and changelog. See [CHANGELOG.md](https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md).
 
-[![Mermaid 10.9.0](https://img.shields.io/badge/Mermaid-10.9.0-FF3670?logo=mermaid&logoColor=white)](https://github.com/mermaid-js/mermaid)
+[![Mermaid 11.15.0](https://img.shields.io/badge/Mermaid-11.15.0-FF3670?logo=mermaid&logoColor=white)](https://github.com/mermaid-js/mermaid)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---
@@ -43,7 +43,7 @@ All in a webview, fully offline, with no telemetry.
 ## Features
 
 - 👁️ **WYSIWYG** — every canvas action updates the Mermaid source in real time, and every keystroke in the code pane re-renders the canvas. The canvas *is* the source.
-- 🌐 **Fully offline · no telemetry** — Mermaid 10.9.0 inlined. The extension makes zero network requests at runtime. Works on air-gapped machines.
+- 🌐 **Fully offline · no telemetry** — Mermaid 11.15.0 inlined. The extension makes zero network requests at runtime. Works on air-gapped machines.
 - 🖱️ **Drag-and-drop palette** — process boxes, decisions, subroutines, databases, hexagons, edges, subgraphs, swimlanes, sequence actors, ER entities, class members, state transitions…
 - 🪝 **Drag between nodes to connect** — the editor figures out the right edge syntax for the current diagram family (flowchart `-->`, class `<|--`, ER `||--o{`, state `-->`).
 - ✏️ **Double-click to edit** — labels, styles, colors, members, edge types, arrowheads, cardinalities.
@@ -156,4 +156,4 @@ This extension's source code is licensed under the MIT License — see [LICENSE]
 
 ## Third-party
 
-This extension bundles [Mermaid](https://github.com/mermaid-js/mermaid) (v10.9.0), © 2014–2022 Knut Sveidqvist, also under the MIT License. Full text in [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES); a copy is also embedded as an HTML comment inside [media/mermaid-editor.html](media/mermaid-editor.html) so the editor file remains compliant when distributed standalone.
+This extension bundles [Mermaid](https://github.com/mermaid-js/mermaid) (v11.15.0), © 2014–2022 Knut Sveidqvist, also under the MIT License. Full text in [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES); a copy is also embedded as an HTML comment inside [media/mermaid-editor.html](media/mermaid-editor.html) so the editor file remains compliant when distributed standalone.
