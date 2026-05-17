@@ -4,6 +4,23 @@ All notable changes to **Mermaid NG — Visual Editor** are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] — 2026-05-17
+
+### Changed
+
+- **Mermaid upgraded from 10.9.0 to 11.15.0** (major). The full UMD bundle is still inlined into the editor HTML, so the extension stays fully offline — no CDN, no network calls. Mermaid v11 brings updated diagram renderers, refreshed defaults, and fixes accumulated since 10.9.
+
+### Fixed
+
+- **Drag-to-connect produced an invalid edge** after the v11 upgrade. v11 prepends the diagram container id to every node's SVG id (e.g. `m1-flowchart-A-0` instead of `flowchart-A-0`); the node-id parser unwrapped the wrong layer and inserted edges like `flowchart-A --> ...` into the code. The parser now strips the container prefix correctly for flowchart, state, class, and ER families.
+- **"couldn't locate `<src>`→`<tgt>` in code"** when editing an edge label on a flowchart. Two layered bugs: v11's edge id format (`m1-L_A_B_0`) bypassed the v10-shaped parser and fell into a 50/50 fallback that returned `source=L, target=A-B`; even pre-upgrade, that fallback misfired on node ids containing underscores. The parser now handles the v11 prefix, and the call site cross-checks any id-derived parse against the real edge list in the source — falling through to the position-based fallback when the parse doesn't match a real edge.
+- **"Mermaid bundle failed to load"** in the multi-diagram thumbnail picker after the upgrade. The bundle extractor in `extension.js` was keyed off the literal string `mermaid 10.9.0`; the marker is now version-independent so future Mermaid bumps won't silently break the picker.
+- **Sequence / class / state / ER diagrams rendered tiny and uncentered** when fitted to the canvas. Mermaid emits `width="100%"` + an inline `max-width` for these families (`useMaxWidth: true` is their default), which made the editor's transformed container shrink to canvas width instead of viewBox width — fit math used viewBox dims while the rendered element was canvas-wide, leaving the diagram in the canvas's left third at a too-small scale. The editor now pins each rendered SVG to its intrinsic viewBox dimensions, so fit and center math agree.
+
+### Notes
+
+- **Extension runtime remains fully offline**, no telemetry, no network calls. The bundled Mermaid is now 11.15.0 instead of 10.9.0; the `.vsix` is still self-contained.
+
 ## [1.1.0] — 2026-05-17
 
 ### Added

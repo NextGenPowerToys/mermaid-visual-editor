@@ -7,7 +7,7 @@
 
 A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
-**What's new in 1.1.0** — Azure DevOps Wiki `::: mermaid ... :::` container syntax, plus a new project site, screenshot gallery, and changelog. See [CHANGELOG.md](https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md).
+**What's new in 2.0.0** — Mermaid upgraded from 10.9.0 to 11.15.0 (still inlined, still fully offline). Fixes for drag-to-connect, edge-label editing, the multi-diagram thumbnail picker, and fit/center for sequence / class / state / ER diagrams. See [CHANGELOG.md](https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md).
 
 [![Mermaid 11.15.0](https://img.shields.io/badge/Mermaid-11.15.0-FF3670?logo=mermaid&logoColor=white)](https://github.com/mermaid-js/mermaid)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -57,7 +57,7 @@ All in a webview, fully offline, with no telemetry.
 
 ## Quick start
 
-1. Install the extension from the marketplace, or `code --install-extension mermaid-visual-editor-1.1.0.vsix`.
+1. Install the extension from the marketplace, or `code --install-extension mermaid-visual-editor-2.0.0.vsix`.
 2. **Right-click any `.md`, `.mdx`, `.markdown`, `.mmd`, or `.mermaid` file** in the explorer → **Mermaid NG: Open Mermaid Diagrams from File**, or run the same from the command palette.
 3. Or, **command palette → Mermaid NG: Open Visual Editor** for a scratch panel.
 4. Draw your diagram. Hit `Cmd/Ctrl+S` to save.
@@ -145,7 +145,7 @@ Flowcharts (`flowchart` / `graph`), sequence, class, state, entity-relationship,
 cd vscode-extension
 npm i -g @vscode/vsce
 vsce package --allow-missing-repository
-code --install-extension mermaid-visual-editor-1.1.0.vsix
+code --install-extension mermaid-visual-editor-2.0.0.vsix
 ```
 
 Or, to run a development host: open this `vscode-extension/` folder in VSCode and press `F5`.
