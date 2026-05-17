@@ -743,31 +743,69 @@ function extractMermaidBlocks(text, ext) {
       kind: detectKind(trimmed),
     }];
   }
-  const blocks = [];
-  // Fenced code block: 3+ backticks (or tildes), info string starts with "mermaid".
-  // The closing fence must match the opening fence character and have at least
-  // the same length. CommonMark allows up to 3 leading spaces of indentation.
-  const re = /(^|\n)([ \t]{0,3})(`{3,}|~{3,})[ \t]*mermaid\b[^\n]*\n([\s\S]*?)(?:\r?\n)\2\3+[ \t]*(?=\r?\n|$)/gi;
+  // We collect blocks from two distinct syntaxes and then sort by offset so
+  // a file that mixes them (rare but possible) still hands the picker /
+  // multi-sheet code path a stable, document-ordered list.
+  const found = [];
+
+  // 1. CommonMark fenced code block: 3+ backticks/tildes, info string starts
+  //    with "mermaid". Closing fence must match the opening character and be
+  //    at least as long. Up to 3 leading spaces of indentation.
+  const fenceRe = /(^|\n)([ \t]{0,3})(`{3,}|~{3,})[ \t]*mermaid\b[^\n]*\n([\s\S]*?)(?:\r?\n)\2\3+[ \t]*(?=\r?\n|$)/gi;
+  // 2. Azure DevOps Wiki / Pandoc fenced-div container: ::: mermaid ... :::
+  //    Azure DevOps requires exactly three colons; Pandoc allows 3+. We
+  //    accept 3+ on the open and 3+ on the close (independently) to cover
+  //    both. Same indentation rule as backtick fences.
+  const divRe = /(^|\n)([ \t]{0,3})(:{3,})[ \t]*mermaid\b[^\n]*\n([\s\S]*?)(?:\r?\n)\2:{3,}[ \t]*(?=\r?\n|$)/gi;
+
   let m;
-  let idx = 0;
-  while ((m = re.exec(text)) !== null) {
+  while ((m = fenceRe.exec(text)) !== null) {
     const leadNl = m[1].length;
     const startOffset = m.index + leadNl;
-    const fullMatch = m[0].slice(leadNl);
-    const content = m[4];
-    const lineNumber = text.slice(0, startOffset).split('\n').length;
-    blocks.push({
-      index: idx++,
-      content,
+    const fullLen = m[0].length - leadNl;
+    found.push({
+      content: m[4],
       offset: startOffset,
-      length: fullMatch.length,
-      lineNumber,
-      isWholeFile: false,
+      length: fullLen,
       fenceOpen: m[2] + m[3] + 'mermaid',
       fenceClose: m[2] + m[3],
-      kind: detectKind(content),
     });
   }
+  while ((m = divRe.exec(text)) !== null) {
+    const leadNl = m[1].length;
+    const startOffset = m.index + leadNl;
+    const fullLen = m[0].length - leadNl;
+    // Preserve the user's exact colon counts on both ends so save-back
+    // round-trips byte-for-byte where possible.
+    const closeMatch = m[0].slice(0, m[0].length - (m[0].endsWith('\n') ? 1 : 0))
+      .match(/:{3,}[ \t]*$/);
+    const closeColons = closeMatch ? closeMatch[0].replace(/[ \t]+$/, '') : ':::';
+    found.push({
+      content: m[4],
+      offset: startOffset,
+      length: fullLen,
+      fenceOpen: m[2] + m[3] + ' mermaid',
+      fenceClose: m[2] + closeColons,
+    });
+  }
+
+  found.sort((a, b) => a.offset - b.offset);
+
+  const blocks = [];
+  found.forEach((b, idx) => {
+    const lineNumber = text.slice(0, b.offset).split('\n').length;
+    blocks.push({
+      index: idx,
+      content: b.content,
+      offset: b.offset,
+      length: b.length,
+      lineNumber,
+      isWholeFile: false,
+      fenceOpen: b.fenceOpen,
+      fenceClose: b.fenceClose,
+      kind: detectKind(b.content),
+    });
+  });
   return blocks;
 }
 
@@ -1067,16 +1105,32 @@ function postSaveResult(panel, ok) {
   try { panel.webview.postMessage({ type: 'saveResult', ok: !!ok }); } catch (_) { /* panel may be disposed */ }
 }
 
-// Emit one fenced mermaid block from a sheet's code.
-function renderSheetAsFenced(sheet) {
+// Emit one fenced mermaid block from a sheet's code. `style` picks the
+// container syntax — 'div' yields the Azure DevOps Wiki / Pandoc
+// `::: mermaid ... :::` form, anything else yields the standard backtick
+// fence used by GitHub-flavored markdown.
+function renderSheetAsFenced(sheet, style) {
   const code = String(sheet.code || '').replace(/\n+$/, '');
+  if (style === 'div') return '::: mermaid\n' + code + '\n:::';
   return '```mermaid\n' + code + '\n```';
 }
 
+// Pick the dominant fence style from the existing blocks so newly appended
+// sheets match the file's convention. Defaults to backtick fences.
+function dominantFenceStyle(blocks) {
+  if (!blocks || blocks.length === 0) return 'fence';
+  const colonHits = blocks.reduce(
+    (n, b) => n + ((b.fenceOpen || '').trimStart().startsWith(':') ? 1 : 0),
+    0
+  );
+  return colonHits > blocks.length / 2 ? 'div' : 'fence';
+}
+
 // Join every sheet as fenced blocks with a blank line between them — used
-// when creating a brand-new markdown file via Save As.
+// when creating a brand-new markdown file via Save As. New files always use
+// the backtick fence (the most portable syntax).
 function joinSheetsAsMarkdown(sheetsArr) {
-  return sheetsArr.map(renderSheetAsFenced).join('\n\n') + '\n';
+  return sheetsArr.map((s) => renderSheetAsFenced(s)).join('\n\n') + '\n';
 }
 
 // Rewrite a markdown source file's mermaid blocks against a new sheets[]
@@ -1104,10 +1158,12 @@ function rewriteMarkdownBlocks(text, ext, sheetsArr) {
   }
   if (sheetsArr.length > blocks.length) {
     // Normalize to a single trailing \n, then append each new sheet as a
-    // block separated by a blank line.
+    // block separated by a blank line. Match the file's existing fence
+    // style so an Azure DevOps Wiki document keeps using ::: containers.
+    const style = dominantFenceStyle(blocks);
     out = out.replace(/\n*$/, '\n');
     for (let i = blocks.length; i < sheetsArr.length; i++) {
-      out += '\n' + renderSheetAsFenced(sheetsArr[i]) + '\n';
+      out += '\n' + renderSheetAsFenced(sheetsArr[i], style) + '\n';
     }
   }
   return out;
