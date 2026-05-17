@@ -4382,6 +4382,20 @@ async function render() {
   try {
     const { svg } = await mermaid.render(id, code);
     outputEl.innerHTML = svg;
+    // Mermaid emits width="100%" + inline max-width for several families
+    // (sequence/class/state/er). With outputEl being position:absolute, that
+    // makes the SVG shrink to canvas width instead of viewBox width, breaking
+    // fit/center math. Pin the intrinsic size from viewBox so outputEl matches
+    // what we measure.
+    (function pinSvgSize() {
+      const s = outputEl.querySelector('svg');
+      if (!s) return;
+      const vb = s.viewBox && s.viewBox.baseVal;
+      if (!vb || !vb.width || !vb.height) return;
+      s.setAttribute('width', vb.width);
+      s.setAttribute('height', vb.height);
+      s.style.maxWidth = 'none';
+    })();
     // Toggle interactive-graph affordances based on what actually rendered
     // (flowchart / state / class / ER all expose g.node + edge paths).
     canvasWrap.classList.toggle('graph-mode', isGraphDiagram());
