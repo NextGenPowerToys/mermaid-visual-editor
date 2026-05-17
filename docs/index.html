@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Primary SEO -->
+  <title>Mermaid NG — Visual Editor for VSCode · WYSIWYG, drag-and-drop, fully offline Mermaid diagrams</title>
+  <meta name="description" content="Mermaid NG is a WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams inside VSCode. Multi-sheet (draw.io style), round-trips .md and .mmd files in place, exports SVG/PNG, runs fully offline — Mermaid 10.9.0 is bundled, no network calls, no telemetry. For software architects, developers, and AI workflows." />
+  <meta name="keywords" content="Mermaid NG, Mermaid, mermaid-js, WYSIWYG, what you see is what you get, visual editor, drag and drop, drag-and-drop, fully offline, no cloud, no telemetry, privacy, VSCode extension, flowchart, sequence diagram, class diagram, state diagram, ER diagram, entity relationship, gantt, mindmap, gitgraph, timeline, quadrant, architecture diagram, software architecture, system design, AI friendly, AI-friendly, LLM, ChatGPT, Claude, documentation, markdown, MDX, MMD, draw.io alternative, Lucidchart alternative, NGPowerToys" />
+  <meta name="author" content="NGPowerToys" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#175fa5" />
+  <link rel="canonical" href="https://nextgenpowertoys.github.io/mermaid-visual-editor/" />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
+
+  <!-- Open Graph (Facebook, LinkedIn, Slack, Discord, …) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Mermaid NG — Visual Editor" />
+  <meta property="og:title" content="Mermaid NG — WYSIWYG visual editor for Mermaid diagrams in VSCode" />
+  <meta property="og:description" content="Drag-and-drop, WYSIWYG editor for AI-friendly Mermaid diagrams. Multi-sheet, edits .md / .mmd in place, exports SVG/PNG, runs fully offline. For architects and developers." />
+  <meta property="og:url" content="https://nextgenpowertoys.github.io/mermaid-visual-editor/" />
+  <meta property="og:image" content="https://nextgenpowertoys.github.io/mermaid-visual-editor/icon-hd.png" />
+  <meta property="og:image:alt" content="Mermaid NG — Visual Editor icon" />
+  <meta property="og:image:width" content="1032" />
+  <meta property="og:image:height" content="1003" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter / X cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mermaid NG — WYSIWYG Mermaid editor for VSCode" />
+  <meta name="twitter:description" content="Drag-and-drop, WYSIWYG editor for AI-friendly Mermaid diagrams. Multi-sheet, edits .md / .mmd in place, fully offline." />
+  <meta name="twitter:image" content="https://nextgenpowertoys.github.io/mermaid-visual-editor/icon-hd.png" />
+  <meta name="twitter:image:alt" content="Mermaid NG — Visual Editor icon" />
+
+  <!-- Schema.org structured data: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Mermaid NG — Visual Editor",
+    "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "VSCode Extension",
+    "operatingSystem": "Windows, macOS, Linux",
+    "description": "WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams inside VSCode. Multi-sheet, round-trips .md and .mmd files in place, exports SVG/PNG, runs fully offline with Mermaid 10.9.0 bundled.",
+    "softwareVersion": "1.0.0",
+    "downloadUrl": "https://github.com/NextGenPowerToys/mermaid-visual-editor/releases/latest",
+    "url": "https://nextgenpowertoys.github.io/mermaid-visual-editor/",
+    "image": "https://nextgenpowertoys.github.io/mermaid-visual-editor/icon-hd.png",
+    "license": "https://opensource.org/licenses/MIT",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "NGPowerToys",
+      "url": "https://github.com/NextGenPowerToys"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "NGPowerToys",
+      "url": "https://github.com/NextGenPowerToys"
+    },
+    "keywords": "WYSIWYG, drag and drop, Mermaid, mermaid-js, fully offline, no cloud, no telemetry, VSCode, visual editor, AI friendly, LLM, flowchart, sequence, class, ER, state diagram, software architecture, system design, documentation, markdown, draw.io alternative, Lucidchart alternative"
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-soft: #f5f4ef;
+      --bg-card: #ffffff;
+      --text: #1a1a18;
+      --text-soft: #5f5e5a;
+      --text-muted: #888780;
+      --accent: #175fa5;
+      --accent-hover: #134a82;
+      --success: #2d7a2d;
+      --danger: #a32d2d;
+      --border: rgba(0, 0, 0, 0.1);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15151a;
+        --bg-soft: #1f1f25;
+        --bg-card: #1d1d23;
+        --text: #f5f4ef;
+        --text-soft: #b4b2a9;
+        --text-muted: #80807a;
+        --accent: #6ea7e3;
+        --accent-hover: #92bce8;
+        --success: #82c182;
+        --danger: #f09595;
+        --border: rgba(255, 255, 255, 0.1);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+    code, pre { font-family: var(--font-mono); }
+    code { background: var(--bg-soft); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    pre {
+      background: var(--bg-soft);
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      overflow-x: auto;
+      font-size: 0.9em;
+      border: 1px solid var(--border);
+    }
+    pre code { background: transparent; padding: 0; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* Top nav */
+    nav.top {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    nav.top .container { display: flex; align-items: center; justify-content: space-between; }
+    nav.top .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text); }
+    nav.top .brand img { width: 32px; height: 32px; }
+    nav.top .links { display: flex; gap: 24px; font-size: 14px; }
+    nav.top .links a { color: var(--text-soft); }
+    nav.top .links a:hover { color: var(--accent); text-decoration: none; }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+    }
+    .hero img.icon {
+      width: 180px;
+      height: auto;
+      margin-bottom: 28px;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.15));
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+    .hero .tagline {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-soft);
+      max-width: 760px;
+      margin: 0 auto 32px;
+    }
+    .hero .tagline strong { color: var(--text); font-weight: 600; }
+    .pill-row {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+      margin-bottom: 32px;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+    .pill .dot { color: var(--success); font-weight: bold; }
+    .cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 15px;
+      border: 1px solid var(--border);
+      transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
+      cursor: pointer;
+      text-decoration: none !important;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-primary { background: var(--accent); color: #fff !important; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); color: #fff !important; }
+    .btn-secondary { background: var(--bg-card); color: var(--text) !important; }
+
+    /* Sections */
+    section { padding: 72px 0; }
+    section.alt { background: var(--bg-soft); }
+    section h2 {
+      font-size: clamp(26px, 3.5vw, 34px);
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    section .lede {
+      font-size: 16px;
+      color: var(--text-soft);
+      margin-bottom: 40px;
+      max-width: 720px;
+    }
+
+    /* Feature grid */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    .feature {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .feature:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent);
+    }
+    .feature .emoji { font-size: 28px; margin-bottom: 12px; display: block; }
+    .feature h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+    .feature p { color: var(--text-soft); font-size: 14.5px; }
+
+    /* Use cases */
+    .use-cases {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+    .use-case {
+      padding: 24px;
+      border-left: 3px solid var(--accent);
+      background: var(--bg-card);
+      border-radius: 4px;
+    }
+    .use-case h3 { font-size: 16px; margin-bottom: 6px; }
+    .use-case p { color: var(--text-soft); font-size: 14.5px; }
+
+    /* Commands table */
+    .cmds {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .cmds th, .cmds td {
+      padding: 14px 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 14.5px;
+    }
+    .cmds th { background: var(--bg-soft); font-weight: 600; color: var(--text-soft); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .cmds tr:last-child td { border-bottom: none; }
+    .cmds code { font-size: 13px; }
+
+    /* Install */
+    .install-card {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .install-card h3 { font-size: 16px; margin-bottom: 12px; }
+    .install-card + .install-card { margin-top: 16px; }
+
+    /* Footer */
+    footer {
+      padding: 40px 0 60px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 14px;
+      text-align: center;
+    }
+    footer .footer-links {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 24px;
+      margin-bottom: 16px;
+    }
+    footer .copyright { font-size: 13px; }
+
+    @media (max-width: 600px) {
+      nav.top .links { display: none; }
+      .hero { padding: 56px 0 40px; }
+      .hero img.icon { width: 140px; }
+      section { padding: 56px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="container">
+    <a class="brand" href="#top">
+      <img src="icon.png" alt="" />
+      Mermaid NG
+    </a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="#use-cases">Use cases</a>
+      <a href="#commands">Commands</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/NextGenPowerToys/mermaid-visual-editor">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container">
+    <img class="icon" src="icon-hd.png" alt="Mermaid NG — Visual Editor icon" />
+    <h1>Mermaid NG — Visual Editor</h1>
+    <p class="tagline">
+      A <strong>WYSIWYG, drag-and-drop visual editor</strong> for AI-friendly Mermaid diagrams, right inside VSCode.
+      Built for <strong>software architects</strong> and <strong>developers</strong> who design systems faster when they can <em>see</em> what they're building —
+      and round-trip every diagram back into the <code>.md</code> or <code>.mmd</code> files it lives in.
+    </p>
+
+    <div class="pill-row">
+      <span class="pill"><span class="dot">●</span> WYSIWYG</span>
+      <span class="pill"><span class="dot">●</span> Drag-and-drop</span>
+      <span class="pill"><span class="dot">●</span> Fully offline</span>
+      <span class="pill"><span class="dot">●</span> No telemetry</span>
+      <span class="pill"><span class="dot">●</span> Multi-sheet</span>
+      <span class="pill"><span class="dot">●</span> Mermaid 10.9.0 bundled</span>
+      <span class="pill"><span class="dot">●</span> MIT</span>
+    </div>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/NextGenPowerToys/mermaid-visual-editor/releases/latest">Download .vsix</a>
+      <a class="btn btn-secondary" href="https://github.com/NextGenPowerToys/mermaid-visual-editor">View on GitHub</a>
+      <a class="btn btn-secondary" href="#install">Install instructions</a>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="container">
+    <h2>Why Mermaid NG?</h2>
+    <p class="lede">
+      Mermaid is the lingua franca for diagrams in modern engineering and AI workflows — it's text, so LLMs love it, Git diffs cleanly, and it renders everywhere.
+      But writing the text by hand is slow and reading a complex diagram is painful. Mermaid NG closes the loop with a <strong>WYSIWYG</strong> canvas
+      that <em>is</em> the Mermaid source.
+    </p>
+
+    <div class="features">
+      <div class="feature">
+        <span class="emoji">👁️</span>
+        <h3>WYSIWYG — what you see is what you get</h3>
+        <p>Every change on the canvas updates the Mermaid source in real time, and every keystroke in the code pane re-renders the canvas. They're the same thing.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🖱️</span>
+        <h3>Drag-and-drop palette</h3>
+        <p>Process boxes, decisions, subroutines, databases, hexagons, edges, subgraphs, sequence actors, ER entities, class members, state transitions — drag onto the canvas.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🌐</span>
+        <h3>Fully offline</h3>
+        <p>Mermaid 10.9.0 is inlined. The extension makes <strong>zero network requests at runtime</strong>. No telemetry. No cloud. Works on air-gapped machines.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">📑</span>
+        <h3>Multi-sheet (draw.io style)</h3>
+        <p>Every <code>```mermaid</code> block in a markdown file becomes its own tab. Each sheet has its own undo history. Add, rename, remove sheets inline.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🤝</span>
+        <h3>AI-friendly</h3>
+        <p>Mermaid is text, so paste any LLM's diagram, refine it visually, paste back. No format conversion, no PNG round trips, no fidelity loss.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">💾</span>
+        <h3>Round-trips Markdown in place</h3>
+        <p>Save back rewrites <em>only</em> the diagram blocks in your <code>.md</code> file — surrounding prose, code fences, frontmatter are preserved.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🪝</span>
+        <h3>Click to connect, double-click to edit</h3>
+        <p>Drag from one node onto another to wire them up — the right edge syntax is picked per diagram family. Double-click for labels, styles, colors, members.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">↶</span>
+        <h3>Full undo / redo</h3>
+        <p><code>Cmd/Ctrl+Z</code>, <code>Cmd+Shift+Z</code> / <code>Ctrl+Y</code>. Captures every visual mutation — drag, modal apply, delete, type — per sheet.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🖼️</span>
+        <h3>SVG / PNG export</h3>
+        <p>Native save dialog, default filenames derived from the diagram <code>title:</code> or active sheet name, so multi-sheet exports stay distinguishable.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🗑️</span>
+        <h3>Hover to delete</h3>
+        <p>Hover any node or edge and press <code>Delete</code> / <code>Backspace</code>, or hit the red Delete button in the edit modal. Undoable.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🎨</span>
+        <h3>12+ diagram families</h3>
+        <p>Flowchart, sequence, class, state, ER, gantt, pie, journey, mindmap, gitgraph, timeline, quadrant — all in the same editor.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🔒</span>
+        <h3>Private by design</h3>
+        <p>No accounts, no analytics, no opt-outs needed. Your diagrams never leave your machine.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="use-cases">
+  <div class="container">
+    <h2>Built for</h2>
+    <p class="lede">
+      Anyone who finds themselves squinting at <code>```mermaid</code> blocks and wishing they could just <em>move that node over there</em>.
+    </p>
+    <div class="use-cases">
+      <div class="use-case">
+        <h3>Software architects</h3>
+        <p>System design diagrams that live alongside the docs they describe. C4-style models, deployment topologies, sequence flows — built visually, committed as text.</p>
+      </div>
+      <div class="use-case">
+        <h3>Developers</h3>
+        <p>Edit <code>```mermaid</code> blocks inside README.md visually without leaving VSCode. Stop hand-counting arrows in a textarea.</p>
+      </div>
+      <div class="use-case">
+        <h3>AI / LLM workflows</h3>
+        <p>Ask an LLM for a diagram, paste the Mermaid into a new sheet, refine it visually, paste back. The canvas is the source.</p>
+      </div>
+      <div class="use-case">
+        <h3>Technical writers</h3>
+        <p>Keep diagrams alongside the prose they describe, in the same Markdown file. Multi-sheet tabs map 1:1 to the blocks in your doc.</p>
+      </div>
+      <div class="use-case">
+        <h3>Air-gapped / regulated environments</h3>
+        <p>No network calls, no cloud, no telemetry. Mermaid is bundled inside the extension — works behind a firewall, on a plane, on a secured machine.</p>
+      </div>
+      <div class="use-case">
+        <h3>draw.io / Lucidchart users</h3>
+        <p>Same multi-sheet tab model, but every diagram is plain Mermaid text — diffs cleanly in Git, renders on GitHub, no proprietary file format.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="commands">
+  <div class="container">
+    <h2>Commands</h2>
+    <p class="lede">
+      All commands live under the <strong>Mermaid NG</strong> category in the VSCode command palette.
+    </p>
+    <table class="cmds">
+      <thead>
+        <tr><th>Command</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Mermaid NG: Open Visual Editor</code></td>
+          <td>Opens an empty visual editor in a new panel.</td>
+        </tr>
+        <tr>
+          <td><code>Mermaid NG: Open Visual Editor with Selection</code></td>
+          <td>Seeds the editor with the current text editor selection.</td>
+        </tr>
+        <tr>
+          <td><code>Mermaid NG: Open Mermaid Diagrams from File</code></td>
+          <td>Scans the file. One diagram opens directly; multiple diagrams show a thumbnail picker that opens all of them as sheets, with the clicked one active.</td>
+        </tr>
+        <tr>
+          <td><code>Mermaid NG: Insert Current Diagram into Active Editor</code></td>
+          <td>Inserts the active sheet's code at the cursor (or replaces the selection) in the focused text editor.</td>
+        </tr>
+        <tr>
+          <td><code>Mermaid NG: Save Diagram Back to Source File</code></td>
+          <td>Bound to <code>Cmd/Ctrl+S</code> while the panel is focused. Rewrites every sheet back into the source file, or opens a Save As dialog for scratch panels.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="alt" id="install">
+  <div class="container">
+    <h2>Install</h2>
+    <p class="lede">Released as a <code>.vsix</code> on GitHub. Marketplace publication is in progress.</p>
+
+    <div class="install-card">
+      <h3>From the GitHub release</h3>
+      <pre><code># Download the latest .vsix
+curl -LO https://github.com/NextGenPowerToys/mermaid-visual-editor/releases/latest/download/mermaid-visual-editor-1.0.0.vsix
+
+# Install it into VSCode
+code --install-extension mermaid-visual-editor-1.0.0.vsix</code></pre>
+    </div>
+
+    <div class="install-card">
+      <h3>From source</h3>
+      <pre><code>git clone https://github.com/NextGenPowerToys/mermaid-visual-editor.git
+cd mermaid-visual-editor/vscode-extension
+npx @vscode/vsce package --allow-missing-repository
+code --install-extension mermaid-visual-editor-1.0.0.vsix</code></pre>
+    </div>
+
+    <div class="install-card">
+      <h3>For development</h3>
+      <p style="color: var(--text-soft); font-size: 14.5px;">
+        Open <code>vscode-extension/</code> in VSCode and press <code>F5</code> to launch an Extension Development Host with the extension loaded.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="getting-started">
+  <div class="container">
+    <h2>Getting started</h2>
+    <p class="lede">Two ways to start drawing.</p>
+
+    <div class="features">
+      <div class="feature">
+        <span class="emoji">📄</span>
+        <h3>Edit an existing diagram</h3>
+        <p>Right-click any <code>.md</code>, <code>.mdx</code>, <code>.markdown</code>, <code>.mmd</code>, or <code>.mermaid</code> file in the explorer and pick <strong>Mermaid NG: Open Mermaid Diagrams from File</strong>. Single-diagram files open directly; multi-diagram files show a thumbnail picker first.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">✨</span>
+        <h3>Start a new diagram</h3>
+        <p>Open the command palette and run <strong>Mermaid NG: Open Visual Editor</strong> for a scratch panel. Hit <code>Cmd/Ctrl+S</code> when you're done — a Save As dialog will create a new <code>.md</code> (or <code>.mmd</code>) for it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com/NextGenPowerToys/mermaid-visual-editor">GitHub</a>
+      <a href="https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/vscode-extension/README.md">Documentation</a>
+      <a href="https://github.com/NextGenPowerToys/mermaid-visual-editor/releases">Releases</a>
+      <a href="https://github.com/NextGenPowerToys/mermaid-visual-editor/issues">Issues</a>
+      <a href="https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/LICENSE">License (MIT)</a>
+      <a href="https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/THIRD-PARTY-LICENSES">Third-party notice</a>
+    </div>
+    <p class="copyright">
+      Mermaid NG — Visual Editor · © 2026 <a href="https://github.com/NextGenPowerToys">NGPowerToys</a> · MIT License.
+      Bundles <a href="https://github.com/mermaid-js/mermaid">Mermaid</a> 10.9.0 © 2014–2022 Knut Sveidqvist, also MIT.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

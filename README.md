@@ -2,15 +2,18 @@
 
 ![Mermaid NG — Visual Editor](vscode-extension/media/icon-hd.png)
 
-**Drag-and-drop visual editor for AI-friendly Mermaid diagrams.** Built for architects and developers who want to *see* their flowcharts, sequence diagrams, class / ER / state models, gantt charts and mindmaps while building them — and round-trip them into the same `.md` or `.mmd` files they live in.
+**WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams** — *what you see is what you get*. Built for architects and developers who want to *see* their flowcharts, sequence diagrams, class / ER / state models, gantt charts and mindmaps while building them — and round-trip them into the same `.md` or `.mmd` files they live in.
 
-- Multi-sheet (draw.io style) — every ```` ```mermaid ```` block in a markdown file becomes a tab.
-- Save back rewrites only the diagram blocks; surrounding prose is preserved.
-- SVG / PNG export with sensible default filenames.
-- Fully offline — Mermaid 10.9.0 is bundled, no network calls.
-- Full undo / redo, palette drag, click-to-connect, double-click-to-edit, hover-to-delete.
+- 👁️ **WYSIWYG** — canvas changes update the Mermaid source in real time, and vice versa.
+- 🌐 **Fully offline · no telemetry** — Mermaid 10.9.0 is bundled, zero network calls at runtime.
+- 📑 Multi-sheet (draw.io style) — every ```` ```mermaid ```` block in a markdown file becomes a tab.
+- 💾 Save back rewrites only the diagram blocks; surrounding prose is preserved.
+- 🖼️ SVG / PNG export with sensible default filenames.
+- ↶ Full undo / redo, palette drag, click-to-connect, double-click-to-edit, hover-to-delete.
 
 A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
+
+🌐 **Project site:** <https://nextgenpowertoys.github.io/mermaid-visual-editor/>
 
 ## Repository layout
 

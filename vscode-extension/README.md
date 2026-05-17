@@ -2,7 +2,7 @@
 
 ![Mermaid NG — Visual Editor](media/icon-hd.png)
 
-> **Drag-and-drop visual editor for AI-friendly Mermaid diagrams** — for software architects and developers who design systems faster when they can *see* what they're building. Multi-sheet, round-trips `.md` and `.mmd` files in place, exports SVG/PNG, and runs **fully offline** — Mermaid 10.9.0 is bundled, no network calls.
+> **WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams** — *what you see is what you get*. For software architects and developers who design systems faster when they can *see* what they're building. Multi-sheet, round-trips `.md` and `.mmd` files in place, exports SVG/PNG, and **runs fully offline** — Mermaid 10.9.0 is bundled, no network calls, no telemetry.
 
 A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
@@ -25,6 +25,8 @@ All in a webview, fully offline, with no telemetry.
 
 ## Features
 
+- 👁️ **WYSIWYG** — every canvas action updates the Mermaid source in real time, and every keystroke in the code pane re-renders the canvas. The canvas *is* the source.
+- 🌐 **Fully offline · no telemetry** — Mermaid 10.9.0 inlined. The extension makes zero network requests at runtime. Works on air-gapped machines.
 - 🖱️ **Drag-and-drop palette** — process boxes, decisions, subroutines, databases, hexagons, edges, subgraphs, swimlanes, sequence actors, ER entities, class members, state transitions…
 - 🪝 **Drag between nodes to connect** — the editor figures out the right edge syntax for the current diagram family (flowchart `-->`, class `<|--`, ER `||--o{`, state `-->`).
 - ✏️ **Double-click to edit** — labels, styles, colors, members, edge types, arrowheads, cardinalities.
@@ -33,7 +35,6 @@ All in a webview, fully offline, with no telemetry.
 - 📑 **Multi-sheet tabs** (draw.io style) — open a markdown file with several ```` ```mermaid ```` blocks and edit them all in one panel with tabs.
 - 💾 **Save back in place** — `Cmd/Ctrl+S` writes the diagram(s) back into the source file's exact block, preserving surrounding prose and code fences. For scratch panels, `Save…` opens a Save As dialog and creates a new `.md` (or `.mmd`).
 - 🖼️ **SVG / PNG export** — native Save dialog, default filenames derived from the diagram `title:` or active sheet name.
-- 🌐 **Fully offline** — Mermaid 10.9.0 inlined. The extension makes zero network requests at runtime.
 - 🤝 **AI-friendly** — the canvas IS Mermaid text. Drop in any LLM's diagram code, refine it visually, paste it back.
 
 ## Quick start
