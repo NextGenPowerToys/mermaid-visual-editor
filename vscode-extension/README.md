@@ -7,6 +7,8 @@
 
 A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
+**What's new in 1.1.0** — Azure DevOps Wiki `::: mermaid ... :::` container syntax, plus a new project site, screenshot gallery, and changelog. See [CHANGELOG.md](https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md).
+
 [![Mermaid 10.9.0](https://img.shields.io/badge/Mermaid-10.9.0-FF3670?logo=mermaid&logoColor=white)](https://github.com/mermaid-js/mermaid)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -50,11 +52,12 @@ All in a webview, fully offline, with no telemetry.
 - 📑 **Multi-sheet tabs** (draw.io style) — open a markdown file with several ```` ```mermaid ```` blocks and edit them all in one panel with tabs.
 - 💾 **Save back in place** — `Cmd/Ctrl+S` writes the diagram(s) back into the source file's exact block, preserving surrounding prose and code fences. For scratch panels, `Save…` opens a Save As dialog and creates a new `.md` (or `.mmd`).
 - 🖼️ **SVG / PNG export** — native Save dialog, default filenames derived from the diagram `title:` or active sheet name.
+- 🧱 **Two markdown syntaxes** — picks up both the standard GitHub-flavored ```` ```mermaid ```` fenced blocks **and** the Azure DevOps Wiki / Pandoc `::: mermaid ... :::` container form. Mixed-style files are supported, and save-back preserves each block's fence style.
 - 🤝 **AI-friendly** — the canvas IS Mermaid text. Drop in any LLM's diagram code, refine it visually, paste it back.
 
 ## Quick start
 
-1. Install the extension from the marketplace, or `code --install-extension mermaid-visual-editor-1.0.0.vsix`.
+1. Install the extension from the marketplace, or `code --install-extension mermaid-visual-editor-1.1.0.vsix`.
 2. **Right-click any `.md`, `.mdx`, `.markdown`, `.mmd`, or `.mermaid` file** in the explorer → **Mermaid NG: Open Mermaid Diagrams from File**, or run the same from the command palette.
 3. Or, **command palette → Mermaid NG: Open Visual Editor** for a scratch panel.
 4. Draw your diagram. Hit `Cmd/Ctrl+S` to save.
@@ -86,6 +89,7 @@ What happens next:
 | `.mmd` / `.mermaid` (single diagram) | Visual editor opens directly. |
 | One ```` ```mermaid ```` block in a markdown file | Visual editor opens directly. |
 | Multiple fenced ```` ```mermaid ```` blocks | A picker panel opens with rendered SVG thumbnails. Click one to open **all** diagrams as sheets in the editor, with that one active. |
+| Azure DevOps Wiki `::: mermaid ... :::` containers | Same as fenced blocks — single container opens directly, multiple containers show the picker. Mixed `\`\`\`mermaid` and `:::` syntax in one file is also supported. |
 | No mermaid blocks | A warning notification. |
 
 ## Multi-sheet (draw.io style)
@@ -141,7 +145,7 @@ Flowcharts (`flowchart` / `graph`), sequence, class, state, entity-relationship,
 cd vscode-extension
 npm i -g @vscode/vsce
 vsce package --allow-missing-repository
-code --install-extension mermaid-visual-editor-1.0.0.vsix
+code --install-extension mermaid-visual-editor-1.1.0.vsix
 ```
 
 Or, to run a development host: open this `vscode-extension/` folder in VSCode and press `F5`.

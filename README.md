@@ -10,10 +10,12 @@
 - 💾 Save back rewrites only the diagram blocks; surrounding prose is preserved.
 - 🖼️ SVG / PNG export with sensible default filenames.
 - ↶ Full undo / redo, palette drag, click-to-connect, double-click-to-edit, hover-to-delete.
+- 🧱 Reads both `\`\`\`mermaid` fenced blocks and Azure DevOps Wiki `::: mermaid ... :::` containers.
 
 A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
 🌐 **Project site:** <https://nextgenpowertoys.github.io/mermaid-visual-editor/>
+📝 **Changelog:** [CHANGELOG.md](CHANGELOG.md) · **Current release:** 1.1.0
 
 ## Screenshots
 
@@ -51,7 +53,7 @@ The fastest path is the marketplace, but you can also install the `.vsix` direct
 cd vscode-extension
 npm i -g @vscode/vsce
 vsce package --allow-missing-repository
-code --install-extension mermaid-visual-editor-1.0.0.vsix
+code --install-extension mermaid-visual-editor-1.1.0.vsix
 ```
 
 Or open `vscode-extension/` in VSCode and press `F5` to launch an extension dev host.
