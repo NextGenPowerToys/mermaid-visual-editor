@@ -1,12 +1,14 @@
 {
   "name": "mermaid-visual-editor",
-  "displayName": "Mermaid Visual Editor",
-  "description": "Offline drag-and-drop Mermaid diagram editor for VSCode — multi-sheet, edits .md / .mmd in place, exports SVG/PNG. Mermaid 10.9.0 bundled, no network access required.",
-  "version": "0.3.0",
+  "displayName": "Mermaid NG — Visual Editor",
+  "description": "Drag-and-drop visual editor for AI-friendly Mermaid diagrams. For architects and developers — build, edit, and round-trip flowcharts, sequence, class, ER, and state diagrams across .md and .mmd files. Multi-sheet, offline (Mermaid 10.9.0 bundled), no network calls.",
+  "version": "1.0.0",
   "publisher": "NGPowerToys",
+  "icon": "media/icon.png",
   "author": {
     "name": "NGPowerToys",
-    "email": "nextgenpowertoys@gmail.com"
+    "email": "nextgenpowertoys@gmail.com",
+    "url": "https://github.com/NextGenPowerToys"
   },
   "repository": {
     "type": "git",
@@ -17,21 +19,63 @@
   },
   "homepage": "https://github.com/NextGenPowerToys/mermaid-visual-editor#readme",
   "license": "MIT",
+  "qna": "marketplace",
+  "galleryBanner": {
+    "color": "#1a1a18",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://img.shields.io/badge/Mermaid-10.9.0-FF3670?logo=mermaid&logoColor=white",
+      "href": "https://github.com/mermaid-js/mermaid",
+      "description": "Bundles Mermaid 10.9.0"
+    },
+    {
+      "url": "https://img.shields.io/badge/license-MIT-blue.svg",
+      "href": "https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/LICENSE",
+      "description": "MIT License"
+    }
+  ],
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
     "Visualization",
+    "Programming Languages",
     "Other"
   ],
   "keywords": [
     "mermaid",
+    "mermaid-js",
     "diagram",
+    "diagrams",
+    "visual editor",
+    "drag and drop",
+    "drag-and-drop",
     "flowchart",
     "sequence diagram",
-    "visual editor",
+    "class diagram",
+    "state diagram",
+    "er diagram",
+    "entity relationship",
+    "gantt",
+    "mindmap",
+    "architecture diagram",
+    "software architecture",
+    "system design",
+    "ai",
+    "ai-friendly",
+    "llm",
+    "documentation",
+    "markdown",
+    "mdx",
+    "mmd",
     "offline",
-    "markdown"
+    "no-cloud",
+    "drawio",
+    "draw.io alternative",
+    "lucidchart alternative",
+    "ngpowertoys"
   ],
   "main": "./extension.js",
   "activationEvents": [],
@@ -40,27 +84,27 @@
       {
         "command": "mermaidVisualEditor.open",
         "title": "Open Visual Editor",
-        "category": "Mermaid"
+        "category": "Mermaid NG"
       },
       {
         "command": "mermaidVisualEditor.openWithSelection",
         "title": "Open Visual Editor with Selection",
-        "category": "Mermaid"
+        "category": "Mermaid NG"
       },
       {
         "command": "mermaidVisualEditor.openFromFile",
         "title": "Open Mermaid Diagrams from File",
-        "category": "Mermaid"
+        "category": "Mermaid NG"
       },
       {
         "command": "mermaidVisualEditor.insertIntoEditor",
         "title": "Insert Current Diagram into Active Editor",
-        "category": "Mermaid"
+        "category": "Mermaid NG"
       },
       {
         "command": "mermaidVisualEditor.saveBackToSource",
         "title": "Save Diagram Back to Source File",
-        "category": "Mermaid"
+        "category": "Mermaid NG"
       }
     ],
     "menus": {
