@@ -121,7 +121,11 @@ function buildEditorHtml(context, initialCode, options) {
     '    var el = getCodeEl();\n' +
     '    if (!el) { setTimeout(applyActiveSheetCode, 50); return; }\n' +
     '    var s = sheets[activeIdx];\n' +
-    '    if (s && s.code != null) { el.value = s.code; fire(el); }\n' +
+    '    if (s && s.code != null) {\n' +
+    '      el.value = s.code;\n' +
+    '      if (typeof window.__vsxSyncTypeFromCode === "function") window.__vsxSyncTypeFromCode();\n' +
+    '      fire(el);\n' +
+    '    }\n' +
     '  }\n' +
     '  function syncActiveSheetFromTextarea() {\n' +
     '    var el = getCodeEl();\n' +
@@ -1339,6 +1343,407 @@ async function saveBackToSource(targetPanel) {
 }
 
 // ---------------------------------------------------------------------------
+// Diagram-files explorer (activity bar view)
+// ---------------------------------------------------------------------------
+
+const EXPLORER_GLOB = '**/*.{md,mdx,markdown,mmd,mermaid}';
+const EXPLORER_EXCLUDE = '**/{node_modules,.git,dist,out,build,.next,.cache}/**';
+
+// Walk every workspace folder, find candidate files, and keep only those that
+// contain at least one mermaid block. Returned list is sorted by absolute path
+// so the tree is deterministic across runs.
+async function scanMermaidFiles() {
+  const folders = vscode.workspace.workspaceFolders;
+  if (!folders || folders.length === 0) return [];
+  let uris;
+  try {
+    uris = await vscode.workspace.findFiles(EXPLORER_GLOB, EXPLORER_EXCLUDE);
+  } catch (_) {
+    return [];
+  }
+  const matched = [];
+  const checkOne = async (uri) => {
+    try {
+      const buf = await vscode.workspace.fs.readFile(uri);
+      const text = Buffer.from(buf).toString('utf8');
+      const ext = path.extname(uri.fsPath || uri.path);
+      const blocks = extractMermaidBlocks(text, ext);
+      if (blocks.length > 0) matched.push({ uri, count: blocks.length });
+    } catch (_) { /* unreadable: skip */ }
+  };
+  // Cap concurrency so large workspaces don't slam the FS in one batch.
+  const batchSize = 8;
+  for (let i = 0; i < uris.length; i += batchSize) {
+    await Promise.all(uris.slice(i, i + batchSize).map(checkOne));
+  }
+  matched.sort((a, b) =>
+    (a.uri.fsPath || a.uri.path).localeCompare(b.uri.fsPath || b.uri.path)
+  );
+  return matched;
+}
+
+// Build a nested folder/file tree rooted in each workspace folder. With one
+// workspace folder we hide that root so the tree starts at its immediate
+// children; with several, each ws folder appears as a top-level group.
+// Every folder node carries `folderUri` so the inline "+" action can default
+// the Save dialog into the clicked folder.
+function buildFolderTree(files) {
+  const wsFolders = vscode.workspace.workspaceFolders || [];
+  const singleWs = wsFolders.length === 1 ? wsFolders[0] : null;
+  const wsRoots = new Map();
+  const ensureRoot = (key, label, wsFolder) => {
+    if (!wsRoots.has(key)) {
+      wsRoots.set(key, {
+        type: 'folder',
+        label,
+        depth: 0,
+        wsFolder,
+        folderUri: wsFolder ? wsFolder.uri : undefined,
+        children: new Map(),
+      });
+    }
+    return wsRoots.get(key);
+  };
+
+  for (const f of files) {
+    let wsFolder = null;
+    let relPath = f.uri.fsPath;
+    for (const ws of wsFolders) {
+      const wsPath = ws.uri.fsPath;
+      if (
+        f.uri.fsPath === wsPath ||
+        f.uri.fsPath.startsWith(wsPath + path.sep)
+      ) {
+        wsFolder = ws;
+        relPath = path.relative(wsPath, f.uri.fsPath);
+        break;
+      }
+    }
+    let cursor;
+    if (singleWs) {
+      cursor = ensureRoot(singleWs.uri.toString(), singleWs.name, singleWs);
+    } else if (wsFolder) {
+      cursor = ensureRoot(wsFolder.uri.toString(), wsFolder.name, wsFolder);
+    } else {
+      cursor = ensureRoot('__external__', '(external)', null);
+    }
+
+    const segments = relPath.split(/[\\/]/).filter(Boolean);
+    for (let i = 0; i < segments.length - 1; i++) {
+      const seg = segments[i];
+      if (!cursor.children.has(seg)) {
+        cursor.children.set(seg, {
+          type: 'folder',
+          label: seg,
+          depth: cursor.depth + 1,
+          folderUri: cursor.folderUri
+            ? vscode.Uri.joinPath(cursor.folderUri, seg)
+            : undefined,
+          children: new Map(),
+        });
+      }
+      cursor = cursor.children.get(seg);
+    }
+    const fileName = segments[segments.length - 1] || relPath;
+    cursor.children.set('__file__::' + fileName, {
+      type: 'file',
+      label: fileName,
+      uri: f.uri,
+      count: f.count,
+    });
+  }
+  return { wsRoots, singleWs };
+}
+
+// Sort children of a folder node: folders first (alpha), then files (alpha).
+function sortedFolderChildren(folderNode) {
+  const arr = Array.from(folderNode.children.values());
+  arr.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+    return String(a.label).localeCompare(String(b.label));
+  });
+  return arr;
+}
+
+class MermaidExplorerProvider {
+  constructor() {
+    this._onDidChangeTreeData = new vscode.EventEmitter();
+    this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+    this._scanPromise = null;
+    this._refreshTimer = null;
+  }
+
+  refresh() {
+    if (this._refreshTimer) clearTimeout(this._refreshTimer);
+    this._refreshTimer = setTimeout(() => {
+      this._refreshTimer = null;
+      this._scanPromise = null;
+      this._onDidChangeTreeData.fire();
+    }, 200);
+  }
+
+  _scan() {
+    if (!this._scanPromise) {
+      this._scanPromise = scanMermaidFiles()
+        .then((files) => buildFolderTree(files))
+        .catch(() => ({ wsRoots: new Map(), singleWs: null }));
+    }
+    return this._scanPromise;
+  }
+
+  async getChildren(element) {
+    if (!element) {
+      const tree = await this._scan();
+      const { wsRoots, singleWs } = tree;
+      const action = { type: 'action-create' };
+      const empty = wsRoots.size === 0;
+      if (empty) return [action, { type: 'empty' }];
+
+      // With a single workspace folder, skip the redundant ws-folder row and
+      // surface its immediate children at the top level. With several, list
+      // each ws folder as a collapsible group.
+      if (singleWs && wsRoots.size === 1) {
+        const root = wsRoots.get(singleWs.uri.toString());
+        if (root) return [action, ...sortedFolderChildren(root)];
+      }
+      return [action, ...Array.from(wsRoots.values())];
+    }
+    if (element.type === 'folder') return sortedFolderChildren(element);
+    return [];
+  }
+
+  getTreeItem(element) {
+    if (element.type === 'action-create') {
+      const item = new vscode.TreeItem(
+        'New Mermaid diagram file…',
+        vscode.TreeItemCollapsibleState.None
+      );
+      item.iconPath = new vscode.ThemeIcon('add');
+      item.tooltip = 'Create a new .md or .mmd file with a starter diagram';
+      item.command = {
+        command: 'mermaidVisualEditor.createNewDiagramFile',
+        title: 'New Mermaid Diagram File…',
+      };
+      item.contextValue = 'mermaidActionCreate';
+      return item;
+    }
+    if (element.type === 'empty') {
+      const item = new vscode.TreeItem(
+        'No Mermaid diagrams found in workspace',
+        vscode.TreeItemCollapsibleState.None
+      );
+      item.iconPath = new vscode.ThemeIcon('info');
+      item.contextValue = 'mermaidEmpty';
+      return item;
+    }
+    if (element.type === 'folder') {
+      const item = new vscode.TreeItem(
+        element.label,
+        vscode.TreeItemCollapsibleState.Expanded
+      );
+      item.iconPath = vscode.ThemeIcon.Folder;
+      item.resourceUri = element.folderUri;
+      item.tooltip = element.folderUri
+        ? 'Click the + icon to create a new diagram file in this folder'
+        : undefined;
+      item.contextValue = 'mermaidFolder';
+      return item;
+    }
+    // file
+    const item = new vscode.TreeItem(
+      element.uri,
+      vscode.TreeItemCollapsibleState.None
+    );
+    item.label = element.label;
+    item.description = element.count > 1 ? `${element.count} diagrams` : undefined;
+    const ext = path.extname(element.uri.fsPath || element.uri.path).toLowerCase();
+    const isMermaidExt = ext === '.mmd' || ext === '.mermaid';
+    item.iconPath = new vscode.ThemeIcon(isMermaidExt ? 'symbol-structure' : 'markdown');
+    item.tooltip = 'Open in Mermaid Visual Editor (picker for multi-diagram files)';
+    item.command = {
+      command: 'mermaidVisualEditor.openFromFile',
+      title: 'Open in Mermaid Visual Editor',
+      arguments: [element.uri],
+    };
+    item.contextValue = 'mermaidFile';
+    return item;
+  }
+}
+
+let explorerProvider = null;
+
+// Starter snippets, one per Mermaid diagram type. Keyed by the QuickPick
+// payload below. The first non-comment line of each must match `detectKind`
+// so the visual editor picks the right type from the loaded code.
+const DIAGRAM_TEMPLATES = {
+  flowchart:
+    'flowchart TD\n' +
+    '    A[Start] --> B{Decision}\n' +
+    '    B -->|Yes| C[OK]\n' +
+    '    B -->|No| D[Stop]\n',
+  sequence:
+    'sequenceDiagram\n' +
+    '    Alice->>Bob: Hello Bob, how are you?\n' +
+    '    Bob-->>Alice: Great!\n',
+  class:
+    'classDiagram\n' +
+    '    class Animal {\n' +
+    '        +String name\n' +
+    '        +int age\n' +
+    '        +eat()\n' +
+    '    }\n' +
+    '    Animal <|-- Dog\n',
+  state:
+    'stateDiagram-v2\n' +
+    '    [*] --> Idle\n' +
+    '    Idle --> Active : start\n' +
+    '    Active --> Idle : stop\n' +
+    '    Active --> [*]\n',
+  er:
+    'erDiagram\n' +
+    '    CUSTOMER ||--o{ ORDER : places\n' +
+    '    ORDER ||--|{ LINE-ITEM : contains\n',
+  gantt:
+    'gantt\n' +
+    '    title Project plan\n' +
+    '    dateFormat YYYY-MM-DD\n' +
+    '    section Phase 1\n' +
+    '    Task A :a1, 2026-01-01, 7d\n' +
+    '    Task B :after a1, 5d\n',
+  pie:
+    'pie title Distribution\n' +
+    '    "A" : 40\n' +
+    '    "B" : 35\n' +
+    '    "C" : 25\n',
+  journey:
+    'journey\n' +
+    '    title My day at work\n' +
+    '    section Morning\n' +
+    '      Wake up: 3: Me\n' +
+    '      Coffee: 5: Me\n' +
+    '    section Afternoon\n' +
+    '      Lunch: 4: Me, Team\n',
+  mindmap:
+    'mindmap\n' +
+    '  root((Idea))\n' +
+    '    Branch 1\n' +
+    '      Detail A\n' +
+    '      Detail B\n' +
+    '    Branch 2\n',
+  gitgraph:
+    'gitGraph\n' +
+    '    commit\n' +
+    '    branch develop\n' +
+    '    commit\n' +
+    '    checkout main\n' +
+    '    merge develop\n',
+  timeline:
+    'timeline\n' +
+    '    title History\n' +
+    '    2020 : Project started\n' +
+    '    2025 : Version 2.0\n' +
+    '    2026 : Today\n',
+  quadrant:
+    'quadrantChart\n' +
+    '    title Reach and engagement\n' +
+    '    x-axis Low Reach --> High Reach\n' +
+    '    y-axis Low Engagement --> High Engagement\n' +
+    '    Campaign A: [0.3, 0.6]\n' +
+    '    Campaign B: [0.45, 0.23]\n',
+};
+
+const DIAGRAM_TYPE_PICKS = [
+  { kind: 'flowchart', label: 'Flowchart',          description: 'Process diagrams with branching' },
+  { kind: 'sequence',  label: 'Sequence Diagram',   description: 'Interactions between actors over time' },
+  { kind: 'class',     label: 'Class Diagram',      description: 'Object-oriented class structure' },
+  { kind: 'state',     label: 'State Diagram',      description: 'State machines and transitions' },
+  { kind: 'er',        label: 'ER Diagram',         description: 'Database entity relationships' },
+  { kind: 'gantt',     label: 'Gantt',              description: 'Project timelines and tasks' },
+  { kind: 'pie',       label: 'Pie Chart',          description: 'Categorical proportions' },
+  { kind: 'journey',   label: 'User Journey',       description: 'Experience flow with sentiment' },
+  { kind: 'mindmap',   label: 'Mindmap',            description: 'Hierarchical ideas' },
+  { kind: 'gitgraph',  label: 'Git Graph',          description: 'Branch and commit history' },
+  { kind: 'timeline',  label: 'Timeline',           description: 'Events ordered in time' },
+  { kind: 'quadrant',  label: 'Quadrant Chart',     description: '2×2 grid analysis' },
+];
+
+// Resolve where the Save dialog should default to. Accepts a folder tree node
+// (from the inline "+" on a folder row), a raw folder Uri, or nothing — in
+// which case we fall back to the first workspace folder, then $HOME.
+function resolveCreateBaseDir(arg) {
+  if (arg) {
+    if (arg.type === 'folder' && arg.folderUri) return arg.folderUri;
+    if (typeof arg.fsPath === 'string') return arg;
+    if (arg.resourceUri && typeof arg.resourceUri.fsPath === 'string') {
+      return arg.resourceUri;
+    }
+  }
+  const ws = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
+  if (ws) return ws.uri;
+  return vscode.Uri.file(require('os').homedir());
+}
+
+// Walk through: pick diagram type → pick filename + location (defaulting into
+// the folder the user clicked "+" on, if any) → write starter → open in the
+// visual editor → refresh tree.
+async function createNewDiagramFile(context, arg) {
+  const picked = await vscode.window.showQuickPick(DIAGRAM_TYPE_PICKS, {
+    title: 'New Mermaid diagram — pick a type',
+    placeHolder: 'Pick a diagram type to start from',
+    matchOnDescription: true,
+  });
+  if (!picked) return;
+
+  const starter = DIAGRAM_TEMPLATES[picked.kind] || DIAGRAM_TEMPLATES.flowchart;
+  const baseDir = resolveCreateBaseDir(arg);
+  const suggestedName = picked.kind === 'flowchart' ? 'diagram' : picked.kind;
+  const defaultUri = vscode.Uri.joinPath(baseDir, suggestedName + '.mmd');
+  const target = await vscode.window.showSaveDialog({
+    defaultUri,
+    filters: {
+      'Mermaid': ['mmd', 'mermaid'],
+      'Markdown': ['md', 'mdx', 'markdown'],
+    },
+    saveLabel: 'Create',
+    title: 'New Mermaid diagram file',
+  });
+  if (!target) return;
+
+  const ext = path.extname(target.fsPath).toLowerCase();
+  const isMermaidExt = ext === '.mmd' || ext === '.mermaid';
+  const content = isMermaidExt
+    ? starter
+    : '# ' + picked.label + '\n\n```mermaid\n' + starter + '```\n';
+
+  try {
+    await vscode.workspace.fs.writeFile(target, Buffer.from(content, 'utf8'));
+  } catch (err) {
+    vscode.window.showErrorMessage(
+      'Failed to create file: ' + (err && err.message ? err.message : String(err))
+    );
+    return;
+  }
+  try {
+    await openFromFileUri(context, target);
+  } catch (_) { /* surfaced by openFromFileUri */ }
+  if (explorerProvider) explorerProvider.refresh();
+}
+
+// Normalize the argument shape for `openFromFile`. It can be invoked as:
+//   - a command palette entry (no args; falls back to active editor)
+//   - an explorer/editor context menu (arg is a Uri)
+//   - a tree-view inline action (arg is the TreeItem element from getChildren)
+function resolveOpenFromFileArg(arg) {
+  if (!arg) return null;
+  if (typeof arg.fsPath === 'string') return arg;          // Uri
+  if (arg.uri && typeof arg.uri.fsPath === 'string') return arg.uri; // our tree node
+  if (arg.resourceUri && typeof arg.resourceUri.fsPath === 'string') {
+    return arg.resourceUri; // generic TreeItem
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Extension entry point
 // ---------------------------------------------------------------------------
 
@@ -1355,9 +1760,9 @@ function activate(context) {
           : null;
       createPanel(context, selected);
     }),
-    vscode.commands.registerCommand('mermaidVisualEditor.openFromFile', async (uri) => {
-      let target = uri;
-      if (!target || typeof target.fsPath !== 'string') {
+    vscode.commands.registerCommand('mermaidVisualEditor.openFromFile', async (arg) => {
+      let target = resolveOpenFromFileArg(arg);
+      if (!target) {
         const editor = vscode.window.activeTextEditor;
         target = editor && editor.document && editor.document.uri;
       }
@@ -1396,7 +1801,33 @@ function activate(context) {
         );
       }
     }),
-    vscode.commands.registerCommand('mermaidVisualEditor.saveBackToSource', saveBackToSource)
+    vscode.commands.registerCommand('mermaidVisualEditor.saveBackToSource', saveBackToSource),
+    vscode.commands.registerCommand('mermaidVisualEditor.createNewDiagramFile', (arg) =>
+      createNewDiagramFile(context, arg)
+    ),
+    vscode.commands.registerCommand('mermaidVisualEditor.refreshExplorer', () => {
+      if (explorerProvider) explorerProvider.refresh();
+    })
+  );
+
+  explorerProvider = new MermaidExplorerProvider();
+  const treeView = vscode.window.createTreeView('mermaidNgExplorer', {
+    treeDataProvider: explorerProvider,
+    showCollapseAll: true,
+  });
+  context.subscriptions.push(treeView);
+
+  // Refresh on filesystem changes so newly created/deleted markdown or .mmd
+  // files appear/disappear without manual rescan. Saves and edits also fire
+  // onDidChange, which catches the case of mermaid blocks being added to or
+  // removed from an existing file.
+  const watcher = vscode.workspace.createFileSystemWatcher(EXPLORER_GLOB);
+  context.subscriptions.push(
+    watcher,
+    watcher.onDidChange(() => explorerProvider.refresh()),
+    watcher.onDidCreate(() => explorerProvider.refresh()),
+    watcher.onDidDelete(() => explorerProvider.refresh()),
+    vscode.workspace.onDidChangeWorkspaceFolders(() => explorerProvider.refresh())
   );
 }
 

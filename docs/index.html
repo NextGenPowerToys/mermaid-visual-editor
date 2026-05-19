@@ -44,7 +44,7 @@
     "applicationSubCategory": "VSCode Extension",
     "operatingSystem": "Windows, macOS, Linux",
     "description": "WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams inside VSCode. Multi-sheet, round-trips .md and .mmd files in place, exports SVG/PNG, runs fully offline with Mermaid 11.15.0 bundled.",
-    "softwareVersion": "2.0.0",
+    "softwareVersion": "2.1.0",
     "downloadUrl": "https://github.com/NextGenPowerToys/mermaid-visual-editor/releases/latest",
     "url": "https://nextgenpowertoys.github.io/mermaid-visual-editor/",
     "image": "https://nextgenpowertoys.github.io/mermaid-visual-editor/icon-hd.png",
@@ -407,9 +407,9 @@
     </div>
 
     <p class="whats-new">
-      <strong>What's new in 2.0.0:</strong>
-      Mermaid upgraded from 10.9.0 to 11.15.0 — still inlined, still fully offline.
-      Fixes for drag-to-connect, edge-label editing, the multi-diagram thumbnail picker, and fit/center for sequence / class / state / ER diagrams.
+      <strong>What's new in 2.1.0:</strong>
+      Connectors (edges / relations / transitions) are now armable toggles — pick a connector style, drag node-to-node, get that edge type.
+      Plus a fix for the diagram-type dropdown getting stuck on "Flowchart" when opening sequence / class / state / ER / gantt / pie / journey / mindmap / gitgraph / timeline / quadrant files.
       <a href="https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md">Full changelog →</a>
     </p>
   </div>
@@ -533,6 +533,22 @@
       </figure>
 
       <figure class="shot">
+        <img src="screenshots/image.png" alt="Mermaid NG sidebar in the VSCode Activity Bar, listing every .mmd / .md / .mermaid file in the workspace that contains a Mermaid diagram" loading="lazy" />
+        <figcaption>
+          <strong>Sidebar — every Mermaid file at a glance.</strong>
+          A dedicated Activity Bar view lists every <code>.md</code> / <code>.mmd</code> / <code>.mermaid</code> file in your workspace that contains a diagram. Click to open in the editor; the <code>+</code> button starts a new one.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="screenshots/image%20copy.png" alt="New Mermaid diagram type picker — dropdown listing Flowchart, Sequence Diagram, Class Diagram, State Diagram, ER Diagram, Gantt, Pie Chart, User Journey, Mindmap, Git Graph, Timeline, and Quadrant Chart" loading="lazy" />
+        <figcaption>
+          <strong>Start a new diagram from any type.</strong>
+          The <code>+</code> button (or <code>Mermaid NG: New Mermaid Diagram File…</code> in the command palette) opens a picker with all 12 supported families. Pick one and the new file opens straight into the visual editor with a starter template.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
         <img src="screenshots/05-picker.png" alt="Thumbnail picker showing two rendered Mermaid diagrams (Diagram 1 flowchart and Diagram 2 sequence) with line numbers" loading="lazy" />
         <figcaption>
           <strong>Thumbnail picker for multi-diagram files.</strong>
@@ -630,10 +646,10 @@
     <div class="install-card">
       <h3>From the GitHub release</h3>
       <pre><code># Download the latest .vsix
-curl -LO https://github.com/NextGenPowerToys/mermaid-visual-editor/releases/latest/download/mermaid-visual-editor-2.0.0.vsix
+curl -LO https://github.com/NextGenPowerToys/mermaid-visual-editor/releases/latest/download/mermaid-visual-editor-2.1.0.vsix
 
 # Install it into VSCode
-code --install-extension mermaid-visual-editor-2.0.0.vsix</code></pre>
+code --install-extension mermaid-visual-editor-2.1.0.vsix</code></pre>
     </div>
 
     <div class="install-card">
@@ -641,7 +657,7 @@ code --install-extension mermaid-visual-editor-2.0.0.vsix</code></pre>
       <pre><code>git clone https://github.com/NextGenPowerToys/mermaid-visual-editor.git
 cd mermaid-visual-editor/vscode-extension
 npx @vscode/vsce package --allow-missing-repository
-code --install-extension mermaid-visual-editor-2.0.0.vsix</code></pre>
+code --install-extension mermaid-visual-editor-2.1.0.vsix</code></pre>
     </div>
 
     <div class="install-card">

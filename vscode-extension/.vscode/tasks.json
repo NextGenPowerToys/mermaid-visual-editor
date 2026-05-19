@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "package vsix",
+      "type": "shell",
+      "command": "npx",
+      "args": ["@vscode/vsce", "package", "--no-dependencies"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "group": "build"
+    },
+    {
+      "label": "install vsix locally",
+      "type": "shell",
+      "command": "code",
+      "args": ["--install-extension", "${workspaceFolder}/mermaid-visual-editor-${input:version}.vsix"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "dependsOn": ["package vsix"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "watch extension files",
+      "type": "shell",
+      "command": "echo 'Watching extension.js and media/ — restart Extension Host (Cmd+R in dev window) after changes.'",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "version",
+      "type": "promptString",
+      "description": "Version of the .vsix to install",
+      "default": "2.0.0"
+    }
+  ]
+}

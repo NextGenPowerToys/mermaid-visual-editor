@@ -2,7 +2,7 @@
   "name": "mermaid-visual-editor",
   "displayName": "Mermaid NG — Visual Editor",
   "description": "WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams — what you see is what you get. For architects and developers — build, edit, and round-trip flowcharts, sequence, class, ER, and state diagrams across .md and .mmd files. Multi-sheet (draw.io style), fully offline (Mermaid 11.15.0 bundled), no network calls, no telemetry.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "publisher": "NGPowerToys",
   "icon": "media/icon.png",
   "author": {
@@ -104,7 +104,8 @@
       {
         "command": "mermaidVisualEditor.openFromFile",
         "title": "Open Mermaid Diagrams from File",
-        "category": "Mermaid NG"
+        "category": "Mermaid NG",
+        "icon": "$(graph)"
       },
       {
         "command": "mermaidVisualEditor.insertIntoEditor",
@@ -115,6 +116,42 @@
         "command": "mermaidVisualEditor.saveBackToSource",
         "title": "Save Diagram Back to Source File",
         "category": "Mermaid NG"
+      },
+      {
+        "command": "mermaidVisualEditor.createNewDiagramFile",
+        "title": "New Mermaid Diagram File…",
+        "category": "Mermaid NG",
+        "icon": "$(add)"
+      },
+      {
+        "command": "mermaidVisualEditor.refreshExplorer",
+        "title": "Refresh Mermaid Diagram Files",
+        "category": "Mermaid NG",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "mermaidNg",
+          "title": "Mermaid NG",
+          "icon": "media/sidebar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "mermaidNg": [
+        {
+          "id": "mermaidNgExplorer",
+          "name": "Diagram Files",
+          "contextualTitle": "Mermaid NG"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "mermaidNgExplorer",
+        "contents": "Scanning workspace for Mermaid diagrams…\n[$(add) New Mermaid diagram file…](command:mermaidVisualEditor.createNewDiagramFile)\n[$(refresh) Rescan](command:mermaidVisualEditor.refreshExplorer)"
       }
     ],
     "menus": {
@@ -141,6 +178,30 @@
         {
           "command": "mermaidVisualEditor.openFromFile",
           "when": "resourceExtname == .mmd || resourceExtname == .mermaid || resourceExtname == .md || resourceExtname == .mdx || resourceExtname == .markdown"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "mermaidVisualEditor.createNewDiagramFile",
+          "when": "view == mermaidNgExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mermaidVisualEditor.refreshExplorer",
+          "when": "view == mermaidNgExplorer",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "mermaidVisualEditor.openFromFile",
+          "when": "view == mermaidNgExplorer && viewItem == mermaidFile",
+          "group": "inline"
+        },
+        {
+          "command": "mermaidVisualEditor.createNewDiagramFile",
+          "when": "view == mermaidNgExplorer && viewItem == mermaidFolder",
+          "group": "inline"
         }
       ]
     },

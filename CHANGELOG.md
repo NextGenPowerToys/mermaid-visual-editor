@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to **Mermaid NG — Visual Editor** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.1.0] — 2026-05-19
+### Added
+- **Connectors are now a toggle, not a draggable snippet.** Edge / relation / transition palette items (flowchart arrows, sequence messages, class relations + cardinalities, state transitions, ER cardinalities) render as toggle buttons instead of draggable rows. Click one to *arm* it (blue fill); drag from one node onto another and the armed connector's syntax is used. Click again to disarm. Picking another connector auto-disarms the previous. With nothing armed, drag-to-connect falls back to the previous defaults (`-->` for flowchart/class/state, `||--o{ : relates` for ER). The "snippet-as-A→B template" convention works for both forward (`A --> B`) and reversed (`B-->>A: reply`) templates — the first identifier in the snippet is treated as the source.
+
+### Fixed
+- **Diagram type dropdown stayed on "Flowchart" no matter the file's actual diagram type.** Opening a `sequenceDiagram` / `classDiagram` / `stateDiagram-v2` / `erDiagram` / `gantt` / `pie` / `journey` / `mindmap` / `gitGraph` / `timeline` / `quadrantChart` file rendered the diagram correctly but left the type selector and the palette stuck on flowchart — and changing the dropdown would offer to overwrite the user's code with a starter template. The editor now detects the type from the first meaningful line of code (skipping YAML frontmatter and `%%{init}%%` directives) and syncs the dropdown + palette to the actual diagram, both on initial file open and when switching between sheets in a multi-diagram file.
+
 ## [2.0.0] — 2026-05-17
 ### Changed
 - **Mermaid upgraded from 10.9.0 to 11.15.0** (major). The full UMD bundle is still inlined into the editor HTML, so the extension stays fully offline — no CDN, no network calls. Mermaid v11 brings updated diagram renderers, refreshed defaults, and fixes accumulated since 10.9.

@@ -142,6 +142,14 @@
   .palette-item:hover { border-color: var(--border-active); background: var(--bg); }
   .palette-item:active { cursor: grabbing; }
   .palette-item.dragging { opacity: 0.4; }
+  .palette-item.connector { cursor: pointer; }
+  .palette-item.connector.armed {
+    background: var(--text-info, rgb(23, 95, 165));
+    border-color: var(--text-info, rgb(23, 95, 165));
+    color: #fff;
+  }
+  .palette-item.connector.armed .palette-item-label,
+  .palette-item.connector.armed .palette-item-icon { color: #fff; }
   .palette-item-label { color: var(--text-primary); }
   .palette-item-icon { color: var(--text-tertiary); font-family: var(--font-mono); font-size: 11px; flex-shrink: 0; }
 
@@ -4042,10 +4050,10 @@ const DIAGRAM_TYPES = {
         { label: 'Hexagon',         kind: 'node', shape: ['{{', '}}'], icon: '{{ }}' },
       ]},
       { title: 'Edges', items: [
-        { label: 'Arrow',           kind: 'line', snippet: 'A --> B',           icon: '-->' },
-        { label: 'Labeled arrow',   kind: 'line', snippet: 'A -->|label| B',    icon: '-->|' },
-        { label: 'Dashed',          kind: 'line', snippet: 'A -.-> B',          icon: '-.->' },
-        { label: 'Thick',           kind: 'line', snippet: 'A ==> B',           icon: '==>' },
+        { label: 'Arrow',           kind: 'line', connector: true, snippet: 'A --> B',           icon: '-->' },
+        { label: 'Labeled arrow',   kind: 'line', connector: true, snippet: 'A -->|label| B',    icon: '-->|' },
+        { label: 'Dashed',          kind: 'line', connector: true, snippet: 'A -.-> B',          icon: '-.->' },
+        { label: 'Thick',           kind: 'line', connector: true, snippet: 'A ==> B',           icon: '==>' },
       ]},
       { title: 'Containers', items: [
         { label: 'Subgraph',        kind: 'block', snippet: 'subgraph SG[Group]\n    n1[Item]\nend', icon: '{}' },
@@ -4069,11 +4077,11 @@ const DIAGRAM_TYPES = {
         { label: 'Actor',           kind: 'line', snippet: 'actor User',        icon: 'a' },
       ]},
       { title: 'Messages', items: [
-        { label: 'Message (sync)',  kind: 'line', snippet: 'A->>B: message',    icon: '->>' },
-        { label: 'Reply (dashed)',  kind: 'line', snippet: 'B-->>A: reply',     icon: '-->>' },
-        { label: 'Activate',        kind: 'line', snippet: 'A->>+B: request',   icon: '->>+' },
-        { label: 'Deactivate',      kind: 'line', snippet: 'B-->>-A: response', icon: '-->>-' },
-        { label: 'Async',           kind: 'line', snippet: 'A-)B: async',       icon: '-)' },
+        { label: 'Message (sync)',  kind: 'line', connector: true, snippet: 'A->>B: message',    icon: '->>' },
+        { label: 'Reply (dashed)',  kind: 'line', connector: true, snippet: 'B-->>A: reply',     icon: '-->>' },
+        { label: 'Activate',        kind: 'line', connector: true, snippet: 'A->>+B: request',   icon: '->>+' },
+        { label: 'Deactivate',      kind: 'line', connector: true, snippet: 'B-->>-A: response', icon: '-->>-' },
+        { label: 'Async',           kind: 'line', connector: true, snippet: 'A-)B: async',       icon: '-)' },
       ]},
       { title: 'Blocks', items: [
         { label: 'Note',            kind: 'line',  snippet: 'Note over A,B: note here',                   icon: 'note' },
@@ -4104,16 +4112,16 @@ const DIAGRAM_TYPES = {
         { label: 'Empty class',     kind: 'line',  snippet: 'class Name',                                              icon: 'cls' },
       ]},
       { title: 'Relations', items: [
-        { label: 'Inheritance',     kind: 'line', snippet: 'A <|-- B',            icon: '<|--' },
-        { label: 'Composition',     kind: 'line', snippet: 'A *-- B',             icon: '*--' },
-        { label: 'Aggregation',     kind: 'line', snippet: 'A o-- B',             icon: 'o--' },
-        { label: 'Association',     kind: 'line', snippet: 'A --> B',             icon: '-->' },
-        { label: 'Dependency',      kind: 'line', snippet: 'A ..> B',             icon: '..>' },
-        { label: 'Realization',     kind: 'line', snippet: 'A <|.. B',            icon: '<|..' },
+        { label: 'Inheritance',     kind: 'line', connector: true, snippet: 'A <|-- B',            icon: '<|--' },
+        { label: 'Composition',     kind: 'line', connector: true, snippet: 'A *-- B',             icon: '*--' },
+        { label: 'Aggregation',     kind: 'line', connector: true, snippet: 'A o-- B',             icon: 'o--' },
+        { label: 'Association',     kind: 'line', connector: true, snippet: 'A --> B',             icon: '-->' },
+        { label: 'Dependency',      kind: 'line', connector: true, snippet: 'A ..> B',             icon: '..>' },
+        { label: 'Realization',     kind: 'line', connector: true, snippet: 'A <|.. B',            icon: '<|..' },
       ]},
       { title: 'Cardinality', items: [
-        { label: 'One-to-many',     kind: 'line', snippet: 'A "1" --> "*" B : has',     icon: '1..*' },
-        { label: 'One-to-one',      kind: 'line', snippet: 'A "1" --> "1" B : owns',    icon: '1..1' },
+        { label: 'One-to-many',     kind: 'line', connector: true, snippet: 'A "1" --> "*" B : has',     icon: '1..*' },
+        { label: 'One-to-one',      kind: 'line', connector: true, snippet: 'A "1" --> "1" B : owns',    icon: '1..1' },
       ]},
     ],
   },
@@ -4136,8 +4144,8 @@ const DIAGRAM_TYPES = {
       { title: 'Transitions', items: [
         { label: 'Start → state',   kind: 'line', snippet: '[*] --> Idle',        icon: '[*]→' },
         { label: 'State → end',     kind: 'line', snippet: 'Idle --> [*]',        icon: '→[*]' },
-        { label: 'Transition',      kind: 'line', snippet: 'A --> B',             icon: '-->' },
-        { label: 'Labeled',         kind: 'line', snippet: 'A --> B : event',     icon: '-->:' },
+        { label: 'Transition',      kind: 'line', connector: true, snippet: 'A --> B',             icon: '-->' },
+        { label: 'Labeled',         kind: 'line', connector: true, snippet: 'A --> B : event',     icon: '-->:' },
       ]},
       { title: 'Notes', items: [
         { label: 'Note',            kind: 'line', snippet: 'note right of A : note text', icon: 'n' },
@@ -4164,11 +4172,11 @@ const DIAGRAM_TYPES = {
         { label: 'Empty entity',       kind: 'line',  snippet: 'ENTITY',                                          icon: 'E' },
       ]},
       { title: 'Relations', items: [
-        { label: 'One-to-many',     kind: 'line', snippet: 'A ||--o{ B : has',    icon: '||..o{' },
-        { label: 'One-to-one',      kind: 'line', snippet: 'A ||--|| B : owns',   icon: '||..||' },
-        { label: 'Many-to-many',    kind: 'line', snippet: 'A }o--o{ B : tags',   icon: '}o..o{' },
-        { label: 'Zero-or-one',     kind: 'line', snippet: 'A |o--|| B : may',    icon: '|o..||' },
-        { label: 'One-or-many',     kind: 'line', snippet: 'A ||--|{ B : must',   icon: '||..|{' },
+        { label: 'One-to-many',     kind: 'line', connector: true, snippet: 'A ||--o{ B : has',    icon: '||..o{' },
+        { label: 'One-to-one',      kind: 'line', connector: true, snippet: 'A ||--|| B : owns',   icon: '||..||' },
+        { label: 'Many-to-many',    kind: 'line', connector: true, snippet: 'A }o--o{ B : tags',   icon: '}o..o{' },
+        { label: 'Zero-or-one',     kind: 'line', connector: true, snippet: 'A |o--|| B : may',    icon: '|o..||' },
+        { label: 'One-or-many',     kind: 'line', connector: true, snippet: 'A ||--|{ B : must',   icon: '||..|{' },
       ]},
     ],
   },
@@ -5407,6 +5415,17 @@ function buildConnector(opts) {
 // A sensible default relation statement when the user drags a brand-new
 // connection between two nodes, using the syntax of the current family.
 function newConnectorStatement(src, tgt) {
+  // If the user has armed a connector in the palette, instantiate its snippet
+  // with the dragged endpoints. Convention: the FIRST literal "A" or "B" in
+  // the snippet is the source; the OTHER letter is the target. This handles
+  // "normal" templates like `A --> B` and reversed ones like `B-->>A: reply`.
+  if (armedConnector && armedConnector.item && armedConnector.item.snippet) {
+    let firstSeen = null;
+    return armedConnector.item.snippet.replace(/\b([AB])\b/g, (_, letter) => {
+      if (firstSeen === null) { firstSeen = letter; return src; }
+      return letter === firstSeen ? src : tgt;
+    });
+  }
   const fam = diagramFamily();
   if (fam === 'er')
     // ER requires a relationship verb label after the cardinality.
@@ -6191,9 +6210,27 @@ function onEdgeEndpointMouseDown(e) {
   document.addEventListener('mousemove', onMove, { passive: true });
   document.addEventListener('mouseup', onUp);
 }
+// Connector palette items aren't draggable snippets — they're a toggle.
+// Arming one switches drag-to-connect to use that connector's syntax when
+// the user drags from one node to another.
+let armedConnector = null;
+function armConnector(item, itemEl) {
+  const wasArmed = armedConnector && armedConnector.el === itemEl;
+  // Clear any existing armed state first.
+  paletteEl.querySelectorAll('.palette-item.connector.armed')
+    .forEach(el => el.classList.remove('armed'));
+  if (wasArmed) {
+    armedConnector = null;
+    return;
+  }
+  itemEl.classList.add('armed');
+  armedConnector = { item, el: itemEl };
+}
+
 function renderPalette(typeKey) {
   const def = DIAGRAM_TYPES[typeKey];
   paletteEl.innerHTML = '';
+  armedConnector = null;
 
   def.groups.forEach((group, gi) => {
     const groupEl = document.createElement('div');
@@ -6206,11 +6243,14 @@ function renderPalette(typeKey) {
 
     group.items.forEach((item, ii) => {
       const itemEl = document.createElement('div');
-      itemEl.className = 'palette-item';
-      itemEl.draggable = true;
+      const isConnector = !!item.connector;
+      itemEl.className = isConnector ? 'palette-item connector' : 'palette-item';
+      itemEl.draggable = !isConnector;
       itemEl.dataset.gi = gi;
       itemEl.dataset.ii = ii;
-      itemEl.title = 'Drag onto canvas or click to append';
+      itemEl.title = isConnector
+        ? 'Click to arm; drag between nodes to connect'
+        : 'Drag onto canvas or click to append';
 
       const labelEl = document.createElement('span');
       labelEl.className = 'palette-item-label';
@@ -6223,18 +6263,21 @@ function renderPalette(typeKey) {
       itemEl.appendChild(labelEl);
       itemEl.appendChild(iconEl);
 
-      itemEl.addEventListener('dragstart', (e) => {
-        // Carry indices through the drag — we look up the item again on drop.
-        e.dataTransfer.setData('application/x-mermaid-palette', JSON.stringify({ type: typeKey, gi, ii }));
-        e.dataTransfer.effectAllowed = 'copy';
-        itemEl.classList.add('dragging');
-      });
-      itemEl.addEventListener('dragend', () => itemEl.classList.remove('dragging'));
-
-      itemEl.addEventListener('click', () => {
-        const snippet = snippetForDrop(item, null);
-        appendCode(snippet);
-      });
+      if (isConnector) {
+        itemEl.addEventListener('click', () => armConnector(item, itemEl));
+      } else {
+        itemEl.addEventListener('dragstart', (e) => {
+          // Carry indices through the drag — we look up the item again on drop.
+          e.dataTransfer.setData('application/x-mermaid-palette', JSON.stringify({ type: typeKey, gi, ii }));
+          e.dataTransfer.effectAllowed = 'copy';
+          itemEl.classList.add('dragging');
+        });
+        itemEl.addEventListener('dragend', () => itemEl.classList.remove('dragging'));
+        itemEl.addEventListener('click', () => {
+          const snippet = snippetForDrop(item, null);
+          appendCode(snippet);
+        });
+      }
 
       groupEl.appendChild(itemEl);
     });
@@ -6333,6 +6376,49 @@ function loadType(typeKey) {
   renderPalette(typeKey);
   render();
 }
+
+// Map the first meaningful line of Mermaid source to a DIAGRAM_TYPES key.
+// Skips YAML frontmatter, init directives, and comment lines.
+function detectTypeKey(code) {
+  if (!code) return null;
+  const lines = code.split('\n');
+  let i = 0;
+  if (/^\s*---\s*$/.test(lines[i] || '')) {
+    i++;
+    while (i < lines.length && !/^\s*---\s*$/.test(lines[i])) i++;
+    i++;
+  }
+  while (i < lines.length) {
+    const t = (lines[i] || '').trim();
+    if (!t || t.startsWith('%%')) { i++; continue; }
+    const head = t.split(/\s/)[0].toLowerCase();
+    if (head === 'flowchart' || head === 'graph') return 'flowchart';
+    if (head === 'sequencediagram') return 'sequence';
+    if (head === 'classdiagram') return 'class';
+    if (head === 'statediagram' || head === 'statediagram-v2') return 'state';
+    if (head === 'erdiagram') return 'er';
+    if (head === 'gantt') return 'gantt';
+    if (head === 'pie') return 'pie';
+    if (head === 'journey') return 'journey';
+    if (head === 'mindmap') return 'mindmap';
+    if (head === 'gitgraph') return 'gitgraph';
+    if (head === 'timeline') return 'timeline';
+    if (head === 'quadrantchart') return 'quadrant';
+    return null;
+  }
+  return null;
+}
+
+// Sync the type dropdown + palette to the code currently in the textarea,
+// without rewriting the code. Called by the host bridge after it applies
+// initial sheets or switches sheets.
+window.__vsxSyncTypeFromCode = function () {
+  const key = detectTypeKey(codeEl.value);
+  if (!key || !DIAGRAM_TYPES[key]) return;
+  if (typeSelect.value !== key) typeSelect.value = key;
+  previousType = key;
+  renderPalette(key);
+};
 
 typeSelect.addEventListener('change', () => {
   const currentTemplate = DIAGRAM_TYPES[previousType]?.starter;

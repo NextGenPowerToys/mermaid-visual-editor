@@ -200,6 +200,8 @@ timeline
                        : Landing page + screenshots
     2026-05-17 (2.0.0) : Mermaid 11.15.0
                        : Drag / label / picker fixes
+    2026-05-19 (2.1.0) : Connector toggles
+                       : Diagram-type auto-detect
 ```
 
 ## 12. Quadrant chart

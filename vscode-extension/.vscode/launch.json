@@ -7,7 +7,109 @@
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}"
-      ]
+      ],
+      "outFiles": [
+        "${workspaceFolder}/extension.js"
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "extension",
+        "order": 1
+      }
+    },
+    {
+      "name": "Run Extension (with samples)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "${workspaceFolder}/../samples"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/extension.js"
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "extension",
+        "order": 2
+      }
+    },
+    {
+      "name": "Run Extension (clean profile)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--disable-extensions",
+        "--profile-temp"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/extension.js"
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "extension",
+        "order": 3
+      }
+    },
+    {
+      "name": "Run Extension (verbose logs)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--verbose"
+      ],
+      "env": {
+        "VSCODE_LOG_LEVEL": "trace"
+      },
+      "outFiles": [
+        "${workspaceFolder}/extension.js"
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "extension",
+        "order": 4
+      }
+    },
+    {
+      "name": "Attach to Extension Host",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "outFiles": [
+        "${workspaceFolder}/extension.js"
+      ],
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "attach",
+        "order": 5
+      }
     }
-  ]
+  ],
+  "compounds": []
 }
