@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to **Mermaid NG — Visual Editor** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.2.1] — 2026-05-22
+### Fixed
+- **Editor layout collapsed when opening from an existing file.** The right column showed only the Mermaid-code panel at the top with a large empty area below, and the Canvas panel was missing entirely. The workspace CSS Grid had no explicit `grid-template-rows`, so its single implicit row sized to content (~200px). That left the right column with no definite height, collapsing its `1fr` Canvas track to 0px. An explicit `minmax(0, 1fr)` row now forces the workspace to fill the available flex height so the Canvas track expands correctly.
+
 ## [2.2.0] — 2026-05-19
 ### Added
 - **Resizable + collapsible panels.** The Palette, Canvas, and Mermaid-code panels now have drag handles between them — drag the vertical splitter to widen / narrow the Palette (the Canvas + code area absorbs the change), drag the horizontal splitter to grow / shrink the code panel (the Canvas absorbs the change). Each side panel has a `−` button in its header to hide it; a thin restore strip appears on the matching edge ("Show palette ▸" on the left, "Show code ▴" at the bottom) — click it to bring the panel back. The canvas auto-refits after every resize or show/hide.
