@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to **Mermaid NG — Visual Editor** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.2.0] — 2026-05-19
+### Added
+- **Resizable + collapsible panels.** The Palette, Canvas, and Mermaid-code panels now have drag handles between them — drag the vertical splitter to widen / narrow the Palette (the Canvas + code area absorbs the change), drag the horizontal splitter to grow / shrink the code panel (the Canvas absorbs the change). Each side panel has a `−` button in its header to hide it; a thin restore strip appears on the matching edge ("Show palette ▸" on the left, "Show code ▴" at the bottom) — click it to bring the panel back. The canvas auto-refits after every resize or show/hide.
+
 ## [2.1.0] — 2026-05-19
 ### Added
 - **Connectors are now a toggle, not a draggable snippet.** Edge / relation / transition palette items (flowchart arrows, sequence messages, class relations + cardinalities, state transitions, ER cardinalities) render as toggle buttons instead of draggable rows. Click one to *arm* it (blue fill); drag from one node onto another and the armed connector's syntax is used. Click again to disarm. Picking another connector auto-disarms the previous. With nothing armed, drag-to-connect falls back to the previous defaults (`-->` for flowchart/class/state, `||--o{ : relates` for ER). The "snippet-as-A→B template" convention works for both forward (`A --> B`) and reversed (`B-->>A: reply`) templates — the first identifier in the snippet is treated as the source.

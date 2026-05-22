@@ -78,21 +78,125 @@
   }
   select:hover { border-color: var(--border-hover); }
 
-  /* Layout: palette on the left, right side stacks canvas (big) and code (small) */
+  /* Layout: palette on the left, right side stacks canvas (big) and code (small).
+     Sizes live in CSS custom properties so the splitter JS can adjust them and
+     so hiding/showing a pane is just toggling a class. */
   .workspace {
+    --palette-w: 220px;
+    --split-w: 8px;
     flex: 1;
     display: grid;
-    grid-template-columns: 220px 1fr;
-    gap: 10px;
+    grid-template-columns: var(--palette-w) var(--split-w) 1fr;
+    gap: 0;
     padding: 10px;
     min-height: 0;
+    position: relative;
   }
+  /* Explicit grid placement — when palette is hidden the first two tracks
+     collapse to 0; without this the right-col auto-places into the empty
+     first track and renders 0px wide. */
+  .workspace > .pane.palette-pane { grid-column: 1; }
+  .workspace > .splitter-v        { grid-column: 2; }
+  .workspace > .right-col         { grid-column: 3; }
   .right-col {
+    --code-h: 200px;
+    --split-h: 8px;
     display: grid;
-    grid-template-rows: 1fr 200px;
-    gap: 10px;
+    grid-template-rows: 1fr var(--split-h) var(--code-h);
+    gap: 0;
     min-height: 0;
+    position: relative;
   }
+  .right-col > .pane.canvas-pane { grid-row: 1; }
+  .right-col > .splitter-h       { grid-row: 2; }
+  .right-col > .pane.code-pane   { grid-row: 3; }
+
+  /* Splitters (drag-to-resize handles between panes) */
+  .splitter-v, .splitter-h {
+    background: transparent;
+    position: relative;
+    z-index: 5;
+    flex-shrink: 0;
+  }
+  .splitter-v { cursor: col-resize; }
+  .splitter-h { cursor: row-resize; }
+  .splitter-v::before, .splitter-h::before {
+    content: '';
+    position: absolute;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background 0.12s;
+  }
+  .splitter-v::before {
+    top: 12px; bottom: 12px;
+    left: 50%; width: 2px;
+    transform: translateX(-50%);
+  }
+  .splitter-h::before {
+    left: 12px; right: 12px;
+    top: 50%; height: 2px;
+    transform: translateY(-50%);
+  }
+  .splitter-v:hover::before, .splitter-h:hover::before,
+  .splitter-v.dragging::before, .splitter-h.dragging::before {
+    background: var(--border-active);
+  }
+  body.splitter-dragging { user-select: none; }
+  body.splitter-dragging.dragging-col, body.splitter-dragging.dragging-col * { cursor: col-resize !important; }
+  body.splitter-dragging.dragging-row, body.splitter-dragging.dragging-row * { cursor: row-resize !important; }
+
+  /* Hidden-pane states: collapse the column/row, hide the pane + splitter,
+     and surface a thin restore strip the user can click to bring it back. */
+  .workspace.palette-hidden { grid-template-columns: 0 0 1fr; }
+  .workspace.palette-hidden > .pane.palette-pane,
+  .workspace.palette-hidden > .splitter-v { display: none; }
+  .right-col.code-hidden { grid-template-rows: 1fr 0 0; }
+  .right-col.code-hidden > .pane.code-pane,
+  .right-col.code-hidden > .splitter-h { display: none; }
+
+  .restore-strip {
+    display: none;
+    position: absolute;
+    cursor: pointer;
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 11px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    user-select: none;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    z-index: 6;
+  }
+  .restore-strip:hover {
+    background: var(--bg);
+    color: var(--text-primary);
+    border-color: var(--border-active);
+  }
+  .restore-strip-v {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    border-radius: var(--radius-md);
+    padding: 12px 4px;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: 18px;
+  }
+  .restore-strip-h {
+    border-radius: var(--radius-md);
+    padding: 4px 14px;
+    left: 10px;
+    right: 10px;
+    bottom: 4px;
+    height: 18px;
+  }
+  .workspace.palette-hidden > .restore-strip-v { display: flex; }
+  .right-col.code-hidden > .restore-strip-h { display: flex; }
+
+  /* Pane header hide button — small, unobtrusive */
+  .pane-hide-btn { font-size: 14px; line-height: 1; padding: 2px 8px; }
   .pane {
     border: 0.5px solid var(--border);
     border-radius: var(--radius-lg);
@@ -204,9 +308,13 @@
     border: none;
   }
   body.has-fullscreen .topbar,
-  body.has-fullscreen .workspace > .pane:first-child,
-  body.has-fullscreen .right-col > .pane:last-child {
-    display: none;
+  body.has-fullscreen .workspace > .pane.palette-pane,
+  body.has-fullscreen .workspace > .splitter-v,
+  body.has-fullscreen .workspace > .restore-strip,
+  body.has-fullscreen .right-col > .pane.code-pane,
+  body.has-fullscreen .right-col > .splitter-h,
+  body.has-fullscreen .right-col > .restore-strip {
+    display: none !important;
   }
   body.has-fullscreen .workspace {
     grid-template-columns: 1fr;
@@ -367,7 +475,8 @@
   .status { font-size: 11px; color: var(--text-tertiary); margin-right: 4px; }
 
   @media (max-width: 880px) {
-    .workspace { grid-template-columns: 1fr; grid-template-rows: 180px 1fr; }
+    .workspace { grid-template-columns: 1fr; grid-template-rows: 180px auto 1fr; }
+    .splitter-v { display: none; }
   }
 
   /* Edit modal */
@@ -519,17 +628,22 @@
     </div>
   </div>
 
-  <div class="workspace">
-    <div class="pane">
+  <div class="workspace" id="workspace">
+    <div class="pane palette-pane">
       <div class="pane-header">
         <span>Palette</span>
-        <span class="status">drag onto canvas</span>
+        <div class="header-actions">
+          <span class="status">drag onto canvas</span>
+          <button class="icon-btn pane-hide-btn" id="hide-palette-btn" title="Hide palette">−</button>
+        </div>
       </div>
       <div class="palette-body" id="palette"></div>
     </div>
 
-    <div class="right-col">
-      <div class="pane">
+    <div class="splitter-v" id="splitter-v" title="Drag to resize palette"></div>
+
+    <div class="right-col" id="right-col">
+      <div class="pane canvas-pane">
         <div class="pane-header">
           <span>Canvas</span>
           <div class="header-actions">
@@ -553,16 +667,23 @@
         </div>
       </div>
 
-      <div class="pane">
+      <div class="splitter-h" id="splitter-h" title="Drag to resize code panel"></div>
+
+      <div class="pane code-pane">
         <div class="pane-header">
           <span>Mermaid code</span>
           <div class="header-actions">
             <button class="icon-btn" id="copy-btn" title="Copy code">Copy</button>
+            <button class="icon-btn pane-hide-btn" id="hide-code-btn" title="Hide code panel">−</button>
           </div>
         </div>
         <textarea class="code-area" id="code" spellcheck="false"></textarea>
       </div>
+
+      <div class="restore-strip restore-strip-h" id="show-code-strip" title="Show code panel">Show code ▴</div>
     </div>
+
+    <div class="restore-strip restore-strip-v" id="show-palette-strip" title="Show palette">Show palette ▸</div>
   </div>
 </div>
 
@@ -6723,6 +6844,109 @@ document.addEventListener('fullscreenchange', () => {
     setTimeout(fitToView, 60);
   }
 });
+
+// ============================================================================
+// Pane resize + hide/show
+// Splitters drag-resize adjacent panes by updating CSS custom properties on
+// the parent grid container. Hide buttons collapse the pane and surface a
+// thin restore strip the user can click to bring it back.
+// ============================================================================
+(function setupPaneControls() {
+  const workspace = document.getElementById('workspace');
+  const rightCol  = document.getElementById('right-col');
+  const splitV    = document.getElementById('splitter-v');
+  const splitH    = document.getElementById('splitter-h');
+  const hidePalBtn  = document.getElementById('hide-palette-btn');
+  const hideCodeBtn = document.getElementById('hide-code-btn');
+  const showPalStrip  = document.getElementById('show-palette-strip');
+  const showCodeStrip = document.getElementById('show-code-strip');
+
+  const PALETTE_MIN = 140;
+  const PALETTE_MAX_PAD = 240; // keep at least this much for the right column
+  const CODE_MIN = 60;
+  const CODE_MAX_PAD = 140;    // keep at least this much for the canvas
+
+  function refitSoon() {
+    if (typeof fitToView === 'function') setTimeout(fitToView, 30);
+  }
+
+  // --- Splitter: palette | right-col (vertical bar, drag horizontally) -----
+  splitV.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    if (workspace.classList.contains('palette-hidden')) return;
+    const rect = workspace.getBoundingClientRect();
+    const startX = e.clientX;
+    const startW = parseFloat(getComputedStyle(workspace).getPropertyValue('--palette-w')) || 220;
+    const splitW = parseFloat(getComputedStyle(workspace).getPropertyValue('--split-w')) || 8;
+    const maxW = Math.max(PALETTE_MIN, rect.width - splitW - PALETTE_MAX_PAD);
+    splitV.classList.add('dragging');
+    document.body.classList.add('splitter-dragging', 'dragging-col');
+    function onMove(ev) {
+      const dx = ev.clientX - startX;
+      const next = Math.max(PALETTE_MIN, Math.min(maxW, startW + dx));
+      workspace.style.setProperty('--palette-w', next + 'px');
+    }
+    function onUp() {
+      splitV.classList.remove('dragging');
+      document.body.classList.remove('splitter-dragging', 'dragging-col');
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      refitSoon();
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+
+  // --- Splitter: canvas | code (horizontal bar, drag vertically) -----------
+  splitH.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    if (rightCol.classList.contains('code-hidden')) return;
+    const rect = rightCol.getBoundingClientRect();
+    const startY = e.clientY;
+    const startH = parseFloat(getComputedStyle(rightCol).getPropertyValue('--code-h')) || 200;
+    const splitH_px = parseFloat(getComputedStyle(rightCol).getPropertyValue('--split-h')) || 8;
+    const maxH = Math.max(CODE_MIN, rect.height - splitH_px - CODE_MAX_PAD);
+    splitH.classList.add('dragging');
+    document.body.classList.add('splitter-dragging', 'dragging-row');
+    function onMove(ev) {
+      // code panel is BELOW the splitter — dragging down shrinks it
+      const dy = ev.clientY - startY;
+      const next = Math.max(CODE_MIN, Math.min(maxH, startH - dy));
+      rightCol.style.setProperty('--code-h', next + 'px');
+    }
+    function onUp() {
+      splitH.classList.remove('dragging');
+      document.body.classList.remove('splitter-dragging', 'dragging-row');
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      refitSoon();
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+
+  // --- Hide / show palette -------------------------------------------------
+  hidePalBtn.addEventListener('click', () => {
+    workspace.classList.add('palette-hidden');
+    refitSoon();
+  });
+  showPalStrip.addEventListener('click', () => {
+    workspace.classList.remove('palette-hidden');
+    refitSoon();
+  });
+
+  // --- Hide / show code ----------------------------------------------------
+  hideCodeBtn.addEventListener('click', () => {
+    rightCol.classList.add('code-hidden');
+    refitSoon();
+  });
+  showCodeStrip.addEventListener('click', () => {
+    rightCol.classList.remove('code-hidden');
+    refitSoon();
+  });
+})();
 
 
 document.getElementById('copy-btn').addEventListener('click', async () => {

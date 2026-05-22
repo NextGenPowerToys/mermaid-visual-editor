@@ -7,7 +7,7 @@
 
 A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
-**What's new in 2.1.0** — Connectors (edges / relations / transitions) are now armable toggles instead of draggable snippets: pick a connector style, drag node-to-node, get an edge of that type. Plus a fix for the diagram-type dropdown / palette getting stuck on "Flowchart" when opening sequence / class / state / ER / gantt / pie / journey / mindmap / gitgraph / timeline / quadrant files. See [CHANGELOG.md](https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md).
+**What's new in 2.2.0** — **Resizable and collapsible panels.** Drag the splitters between Palette ↔ Canvas and Canvas ↔ Mermaid-code to size each pane to taste; the adjacent area absorbs the change proportionally. Click the `−` button in the Palette or Code header to collapse that pane — a thin "Show palette ▸" / "Show code ▴" strip on the edge brings it back. The canvas auto-refits after every resize and show/hide. See [CHANGELOG.md](https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md).
 
 [![Mermaid 11.15.0](https://img.shields.io/badge/Mermaid-11.15.0-FF3670?logo=mermaid&logoColor=white)](https://github.com/mermaid-js/mermaid)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -57,7 +57,7 @@ All in a webview, fully offline, with no telemetry.
 
 ## Quick start
 
-1. Install the extension from the marketplace, or `code --install-extension mermaid-visual-editor-2.1.0.vsix`.
+1. Install the extension from the marketplace, or `code --install-extension mermaid-visual-editor-2.2.0.vsix`.
 2. **Right-click any `.md`, `.mdx`, `.markdown`, `.mmd`, or `.mermaid` file** in the explorer → **Mermaid NG: Open Mermaid Diagrams from File**, or run the same from the command palette.
 3. Or, **command palette → Mermaid NG: Open Visual Editor** for a scratch panel.
 4. Draw your diagram. Hit `Cmd/Ctrl+S` to save.
@@ -145,7 +145,7 @@ Flowcharts (`flowchart` / `graph`), sequence, class, state, entity-relationship,
 cd vscode-extension
 npm i -g @vscode/vsce
 vsce package --allow-missing-repository
-code --install-extension mermaid-visual-editor-2.1.0.vsix
+code --install-extension mermaid-visual-editor-2.2.0.vsix
 ```
 
 Or, to run a development host: open this `vscode-extension/` folder in VSCode and press `F5`.

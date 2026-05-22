@@ -202,6 +202,7 @@ timeline
                        : Drag / label / picker fixes
     2026-05-19 (2.1.0) : Connector toggles
                        : Diagram-type auto-detect
+    2026-05-19 (2.2.0) : Resizable + collapsible panels
 ```
 
 ## 12. Quadrant chart
