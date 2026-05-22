@@ -87,6 +87,10 @@
     flex: 1;
     display: grid;
     grid-template-columns: var(--palette-w) var(--split-w) 1fr;
+    /* Explicit single row sized to fill the flex height — without this the
+       implicit row sizes to content (~200px code-pane), the right-col gets no
+       definite height, and its 1fr canvas track collapses to 0px. */
+    grid-template-rows: minmax(0, 1fr);
     gap: 0;
     padding: 10px;
     min-height: 0;

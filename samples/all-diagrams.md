@@ -1,5 +1,4 @@
 # Mermaid NG — All Supported Diagrams
-
 A single-file gallery of every diagram family Mermaid NG renders. Open it
 in the extension (right-click → **Mermaid NG: Open Mermaid Diagrams from
 File**) — each block below becomes its own sheet in the multi-sheet picker.
