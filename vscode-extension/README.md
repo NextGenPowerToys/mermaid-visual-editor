@@ -7,7 +7,7 @@
 
 A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
-**What's new in 2.2.0** — **Resizable and collapsible panels.** Drag the splitters between Palette ↔ Canvas and Canvas ↔ Mermaid-code to size each pane to taste; the adjacent area absorbs the change proportionally. Click the `−` button in the Palette or Code header to collapse that pane — a thin "Show palette ▸" / "Show code ▴" strip on the edge brings it back. The canvas auto-refits after every resize and show/hide. See [CHANGELOG.md](https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md).
+**What's new in 2.3.0** — **Programmatic direct-open API.** `mermaidVisualEditor.openFromFile` now accepts an optional second argument — `{ source?: string, index?: number }` — that names a specific diagram inside a multi-diagram file. When the hint matches a block, the thumbnail picker is skipped and that diagram opens active (with sibling diagrams still loaded as inactive sheets). Powers the **single-click hand-off from [RTF Markdown Editor](https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor) v3.2.0+** — click any Mermaid diagram in its WYSIWYG canvas and it opens straight here, on the right diagram. Existing callers (right-click menus, explorer context) are unchanged. See [CHANGELOG.md](https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md).
 
 [![Mermaid 11.15.0](https://img.shields.io/badge/Mermaid-11.15.0-FF3670?logo=mermaid&logoColor=white)](https://github.com/mermaid-js/mermaid)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -57,7 +57,7 @@ All in a webview, fully offline, with no telemetry.
 
 ## Quick start
 
-1. Install the extension from the marketplace, or `code --install-extension mermaid-visual-editor-2.2.0.vsix`.
+1. Install the extension from the marketplace, or `code --install-extension mermaid-visual-editor-2.3.0.vsix`.
 2. **Right-click any `.md`, `.mdx`, `.markdown`, `.mmd`, or `.mermaid` file** in the explorer → **Mermaid NG: Open Mermaid Diagrams from File**, or run the same from the command palette.
 3. Or, **command palette → Mermaid NG: Open Visual Editor** for a scratch panel.
 4. Draw your diagram. Hit `Cmd/Ctrl+S` to save.
@@ -145,7 +145,7 @@ Flowcharts (`flowchart` / `graph`), sequence, class, state, entity-relationship,
 cd vscode-extension
 npm i -g @vscode/vsce
 vsce package --allow-missing-repository
-code --install-extension mermaid-visual-editor-2.2.0.vsix
+code --install-extension mermaid-visual-editor-2.3.0.vsix
 ```
 
 Or, to run a development host: open this `vscode-extension/` folder in VSCode and press `F5`.

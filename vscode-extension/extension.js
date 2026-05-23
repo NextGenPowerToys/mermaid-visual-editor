@@ -1055,7 +1055,7 @@ function openThumbnailPicker(context, uri, blocks) {
   });
 }
 
-async function openFromFileUri(context, uri) {
+async function openFromFileUri(context, uri, options) {
   let doc;
   try {
     doc = await vscode.workspace.openTextDocument(uri);
@@ -1078,7 +1078,31 @@ async function openFromFileUri(context, uri) {
     openEditorForFile(context, uri, blocks, 0);
     return;
   }
+  // Programmatic callers can name a specific diagram to skip the picker:
+  // `executeCommand('mermaidVisualEditor.openFromFile', uri, { source, index })`.
+  // Content match wins over index so a caller whose block ordering ever drifts
+  // from ours still lands on the right diagram.
+  const hint = pickBlockFromOptions(blocks, options);
+  if (hint >= 0) {
+    openEditorForFile(context, uri, blocks, hint);
+    return;
+  }
   openThumbnailPicker(context, uri, blocks);
+}
+
+function pickBlockFromOptions(blocks, options) {
+  if (!options || typeof options !== 'object') return -1;
+  if (typeof options.source === 'string') {
+    const target = options.source.trim();
+    if (target) {
+      const i = blocks.findIndex((b) => String(b.content || '').trim() === target);
+      if (i >= 0) return i;
+    }
+  }
+  if (Number.isInteger(options.index) && options.index >= 0 && options.index < blocks.length) {
+    return options.index;
+  }
+  return -1;
 }
 
 // ---------------------------------------------------------------------------
@@ -1760,7 +1784,7 @@ function activate(context) {
           : null;
       createPanel(context, selected);
     }),
-    vscode.commands.registerCommand('mermaidVisualEditor.openFromFile', async (arg) => {
+    vscode.commands.registerCommand('mermaidVisualEditor.openFromFile', async (arg, options) => {
       let target = resolveOpenFromFileArg(arg);
       if (!target) {
         const editor = vscode.window.activeTextEditor;
@@ -1770,7 +1794,7 @@ function activate(context) {
         vscode.window.showWarningMessage('No file to open.');
         return;
       }
-      await openFromFileUri(context, target);
+      await openFromFileUri(context, target, options);
     }),
     vscode.commands.registerCommand('mermaidVisualEditor.insertIntoEditor', async () => {
       const panel = currentPanel || Array.from(allPanels)[0];

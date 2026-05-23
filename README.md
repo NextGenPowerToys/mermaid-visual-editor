@@ -15,7 +15,7 @@
 A [NGPowerToys](https://github.com/NextGenPowerToys) extension.
 
 🌐 **Project site:** <https://nextgenpowertoys.github.io/mermaid-visual-editor/>
-📝 **Changelog:** [CHANGELOG.md](CHANGELOG.md) · **Current release:** 2.2.0
+📝 **Changelog:** [CHANGELOG.md](CHANGELOG.md) · **Current release:** 2.3.0
 
 ## Screenshots
 
@@ -53,7 +53,7 @@ The fastest path is the marketplace, but you can also install the `.vsix` direct
 cd vscode-extension
 npm i -g @vscode/vsce
 vsce package --allow-missing-repository
-code --install-extension mermaid-visual-editor-2.2.0.vsix
+code --install-extension mermaid-visual-editor-2.3.0.vsix
 ```
 
 Or open `vscode-extension/` in VSCode and press `F5` to launch an extension dev host.

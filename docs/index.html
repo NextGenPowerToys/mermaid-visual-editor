@@ -44,7 +44,7 @@
     "applicationSubCategory": "VSCode Extension",
     "operatingSystem": "Windows, macOS, Linux",
     "description": "WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams inside VSCode. Multi-sheet, round-trips .md and .mmd files in place, exports SVG/PNG, runs fully offline with Mermaid 11.15.0 bundled.",
-    "softwareVersion": "2.2.1",
+    "softwareVersion": "2.3.0",
     "downloadUrl": "https://github.com/NextGenPowerToys/mermaid-visual-editor/releases/latest",
     "url": "https://nextgenpowertoys.github.io/mermaid-visual-editor/",
     "image": "https://nextgenpowertoys.github.io/mermaid-visual-editor/icon-hd.png",
@@ -407,8 +407,8 @@
     </div>
 
     <p class="whats-new">
-      <strong>What's new in 2.2.1:</strong>
-      <strong>Editor layout fix.</strong> Opening a diagram from an existing file no longer collapses the Canvas pane — the workspace grid now pins an explicit row so the Canvas track fills the available height, with the Mermaid-code panel sitting beneath it instead of taking over the right column.
+      <strong>What's new in 2.3.0:</strong>
+      <strong>Programmatic direct-open API.</strong> <code>mermaidVisualEditor.openFromFile</code> now accepts an optional <code>{ source, index }</code> hint that names a specific diagram inside a multi-diagram file — when matched, the thumbnail picker is skipped and that diagram opens active (siblings still loaded as inactive sheets). Powers the new <strong>single-click hand-off from <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor">RTF Markdown Editor</a> v3.2.0+</strong> — click any Mermaid diagram in its WYSIWYG canvas and it opens straight here, on the right diagram.
       <a href="https://github.com/NextGenPowerToys/mermaid-visual-editor/blob/main/CHANGELOG.md">Full changelog →</a>
     </p>
   </div>
@@ -645,10 +645,10 @@
     <div class="install-card">
       <h3>From the GitHub release</h3>
       <pre><code># Download the latest .vsix
-curl -LO https://github.com/NextGenPowerToys/mermaid-visual-editor/releases/latest/download/mermaid-visual-editor-2.2.1.vsix
+curl -LO https://github.com/NextGenPowerToys/mermaid-visual-editor/releases/latest/download/mermaid-visual-editor-2.3.0.vsix
 
 # Install it into VSCode
-code --install-extension mermaid-visual-editor-2.2.1.vsix</code></pre>
+code --install-extension mermaid-visual-editor-2.3.0.vsix</code></pre>
     </div>
 
     <div class="install-card">
@@ -656,7 +656,7 @@ code --install-extension mermaid-visual-editor-2.2.1.vsix</code></pre>
       <pre><code>git clone https://github.com/NextGenPowerToys/mermaid-visual-editor.git
 cd mermaid-visual-editor/vscode-extension
 npx @vscode/vsce package --allow-missing-repository
-code --install-extension mermaid-visual-editor-2.2.1.vsix</code></pre>
+code --install-extension mermaid-visual-editor-2.3.0.vsix</code></pre>
     </div>
 
     <div class="install-card">

@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to **Mermaid NG — Visual Editor** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.3.0] — 2026-05-23
+
+### Added
+
+- **Programmatic direct-open API for `mermaidVisualEditor.openFromFile`.** The command now accepts an optional second argument — `{ source?: string, index?: number }` — that names a specific diagram inside a multi-diagram file. When the hint matches a block, the thumbnail picker is skipped and the visual editor opens that diagram active (with sibling diagrams from the same file still loaded as inactive sheets). Content match (`source`) wins over `index`. Invocations without the second arg behave exactly as before. This is the integration hook used by the **RTF Markdown Editor v3.2.0**: clicking a diagram in its WYSIWYG canvas now hands off the picked diagram directly here.
+
+```ts
+await vscode.commands.executeCommand(
+  'mermaidVisualEditor.openFromFile',
+  fileUri,
+  { source: diagramCode },     // or { index: 2 }
+);
+```
+
 ## [2.2.1] — 2026-05-22
 ### Fixed
 - **Editor layout collapsed when opening from an existing file.** The right column showed only the Mermaid-code panel at the top with a large empty area below, and the Canvas panel was missing entirely. The workspace CSS Grid had no explicit `grid-template-rows`, so its single implicit row sized to content (~200px). That left the right column with no definite height, collapsing its `1fr` Canvas track to 0px. An explicit `minmax(0, 1fr)` row now forces the workspace to fill the available flex height so the Canvas track expands correctly.
