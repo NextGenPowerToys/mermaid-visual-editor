@@ -673,6 +673,41 @@
     display: flex; align-items: center; gap: 5px;
     cursor: pointer; user-select: none;
   }
+  /* Default + recent color swatches shown beneath the color picker. */
+  .color-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .color-palette-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 8px;
+    margin-bottom: 2px;
+  }
+  .color-palette-empty {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+  .color-swatch {
+    width: 20px; height: 20px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border);
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+  }
+  .color-swatch:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 1px var(--border-active);
+  }
+  .color-swatch.active {
+    box-shadow: 0 0 0 2px var(--border-active);
+  }
   .modal-actions {
     padding: 12px 18px;
     border-top: 0.5px solid var(--border);
@@ -6281,34 +6316,164 @@ function fieldSelect(labelText, options, current) {
   return { wrap, get: () => sel.value };
 }
 
+// Curated default palette shown above the picker. Three rows: blues,
+// greens/yellows/oranges, reds/purples/grays.
+const DEFAULT_COLOR_PALETTE = [
+  '#cfe3ff', '#8ab4f8', '#4285f4', '#1a73e8',
+  '#d1f0d3', '#81c784', '#34a853',
+  '#fff4cc', '#ffc107', '#ff7043',
+  '#fcc5c5', '#ef5350', '#9c27b0',
+  '#e0e0e0', '#9e9e9e', '#000000',
+];
+
+// In-memory list of colors the user has applied during this editor
+// session, most-recent first. Seeded lazily from the chart's existing
+// style declarations on the first fieldColor() invocation per session.
+let recentColors = [];
+let recentColorsSeeded = false;
+
+function normalizeHex(s) {
+  if (!s) return null;
+  const clean = String(s).trim().replace(/^#/, '').toLowerCase();
+  if (/^[0-9a-f]{3}$/.test(clean)) {
+    return '#' + clean[0]+clean[0]+clean[1]+clean[1]+clean[2]+clean[2];
+  }
+  if (/^[0-9a-f]{6}$/.test(clean)) return '#' + clean;
+  return null;
+}
+
+// Scan the Mermaid source for any hex color literals (style / linkStyle /
+// classDef declarations). Returns unique, normalised #rrggbb values.
+function extractColorsFromCode(code) {
+  const out = [];
+  const seen = new Set();
+  const re = /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/g;
+  let m;
+  while ((m = re.exec(code)) !== null) {
+    const hex = normalizeHex(m[1]);
+    if (hex && !seen.has(hex)) { seen.add(hex); out.push(hex); }
+  }
+  return out;
+}
+
+const MAX_RECENT_COLORS = 14;
+function addRecentColor(hex) {
+  const norm = normalizeHex(hex);
+  if (!norm) return;
+  const idx = recentColors.indexOf(norm);
+  if (idx !== -1) recentColors.splice(idx, 1);
+  recentColors.unshift(norm);
+  if (recentColors.length > MAX_RECENT_COLORS) {
+    recentColors.length = MAX_RECENT_COLORS;
+  }
+}
+
+// Pull every hex color out of the current code and merge into the recent
+// list (without disturbing the user's own most-recent order — chart
+// colors land at the END so user picks always stay on top).
+function seedRecentsFromChart() {
+  const chart = extractColorsFromCode(codeEl ? codeEl.value : '');
+  chart.forEach(hex => {
+    if (!recentColors.includes(hex)) recentColors.push(hex);
+  });
+  if (recentColors.length > MAX_RECENT_COLORS) {
+    recentColors.length = MAX_RECENT_COLORS;
+  }
+}
+
 function fieldColor(labelText, current) {
+  // Seed the recents list on first use (and refresh every open so colors
+  // newly added to the chart's style block show up immediately).
+  seedRecentsFromChart();
+  recentColorsSeeded = true;
+
   const wrap = document.createElement('div');
   wrap.className = 'modal-field';
   const lab = document.createElement('label');
   lab.textContent = labelText;
   wrap.appendChild(lab);
+
   const row = document.createElement('div');
   row.className = 'color-row';
   const inp = document.createElement('input');
   inp.type = 'color';
-  const clean = current ? current.replace('#', '') : '';
-  inp.value = /^[0-9a-fA-F]{6}$/.test(clean) ? '#' + clean : '#cfe3ff';
-  let useColor = !!current;
+  const initialNorm = normalizeHex(current);
+  inp.value = initialNorm || '#cfe3ff';
+  let useColor = !!initialNorm;
   const none = document.createElement('span');
   none.className = 'swatch-none';
   none.textContent = useColor ? '✓ apply color' : '○ leave unchanged';
   none.addEventListener('click', () => {
     useColor = !useColor;
     none.textContent = useColor ? '✓ apply color' : '○ leave unchanged';
+    syncActiveSwatch();
   });
   inp.addEventListener('input', () => {
     useColor = true;
     none.textContent = '✓ apply color';
+    syncActiveSwatch();
   });
   row.appendChild(inp);
   row.appendChild(none);
   wrap.appendChild(row);
-  return { wrap, get: () => (useColor ? inp.value : '') };
+
+  // Helper that re-applies the .active class to whichever swatch matches
+  // the picker's current value (so the user sees which one is selected).
+  let allSwatchEls = [];
+  function syncActiveSwatch() {
+    const val = useColor ? normalizeHex(inp.value) : null;
+    allSwatchEls.forEach(el => {
+      el.classList.toggle('active', val !== null && el.dataset.hex === val);
+    });
+  }
+
+  function addPaletteSection(title, colors, emptyMessage) {
+    const h = document.createElement('div');
+    h.className = 'color-palette-label';
+    h.textContent = title;
+    wrap.appendChild(h);
+    if (!colors.length) {
+      const e = document.createElement('div');
+      e.className = 'color-palette-empty';
+      e.textContent = emptyMessage;
+      wrap.appendChild(e);
+      return;
+    }
+    const grid = document.createElement('div');
+    grid.className = 'color-palette';
+    colors.forEach(hex => {
+      const sw = document.createElement('button');
+      sw.type = 'button';
+      sw.className = 'color-swatch';
+      sw.style.background = hex;
+      sw.dataset.hex = hex;
+      sw.title = hex;
+      sw.addEventListener('click', () => {
+        inp.value = hex;
+        useColor = true;
+        none.textContent = '✓ apply color';
+        syncActiveSwatch();
+      });
+      grid.appendChild(sw);
+      allSwatchEls.push(sw);
+    });
+    wrap.appendChild(grid);
+  }
+
+  addPaletteSection('Default palette', DEFAULT_COLOR_PALETTE, '');
+  addPaletteSection('Recently used', recentColors,
+    'Pick a color or apply one to see recents here.');
+  syncActiveSwatch();
+
+  return {
+    wrap,
+    get: () => {
+      if (!useColor) return '';
+      const out = inp.value || '';
+      addRecentColor(out);
+      return out;
+    },
+  };
 }
 
 // A dynamic add/remove/edit list of "member" rows. `columns` describes each
