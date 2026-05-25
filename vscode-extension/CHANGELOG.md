@@ -3,11 +3,15 @@ All notable changes to **Mermaid NG — Visual Editor** are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.4.0] — 2026-05-25
+## [2.5.0] — 2026-05-25
 
 ### Added
 
-- **Per-node "+" button → shape picker for one-click flow building (flowchart only).** Hovering a flowchart node reveals a small green "+" button just below it (native "Add a connected node" tooltip). Click the "+" to open a 4-icon shape picker — Process box, Rounded, Circle, Decision — anchored under the button. Clicking a shape appends `${source} --> ${newDecl}` and Mermaid re-lays out the diagram automatically. Clicking outside the picker (or picking a shape) closes it. If the source node is inside a subgraph, the new node lands inside the same subgraph (matching drag-and-drop behaviour). Implements [#5](https://github.com/NextGenPowerToys/mermaid-visual-editor/issues/5).
+- **Per-node "+" button → shape picker for one-click flow building (flowchart).** Hovering a flowchart node reveals a small green "+" button just below it (native "Add a connected node" tooltip). The button and its picker strip live in a top-z-index SVG overlay so they always sit above neighbouring nodes, and JS-driven hover with a 200 ms grace timer keeps them visible while the cursor travels from node to button (plus an invisible bridge hit-area covers the gap). Clicking the "+" opens a 4-icon shape picker — Process box, Rounded, Circle, Decision — anchored under the button. Picking a shape appends `${source} --> ${newDecl}` and Mermaid re-lays out automatically. Clicking outside the picker (or picking a shape) closes it. If the source node is inside a subgraph, the new node lands inside the same subgraph. Implements [#5](https://github.com/NextGenPowerToys/mermaid-visual-editor/issues/5).
+
+- **Multi-line labels everywhere.** The edit modal's name / label field is now a textarea, so plain **Enter** inserts a line break and **Cmd/Ctrl+Enter** submits. Real newlines are written to the Mermaid source as the standard `\n` escape (e.g. `A["Line 1\nLine 2"]`, `B -->|"Step 1\nStep 2"| C`, `S1 : "Idle\nwaiting for input"`), and the source is decoded back to real newlines when the modal re-opens so labels round-trip cleanly. Works across flowchart node labels, edge labels (pipe + colon forms), state / class / ER node-label fallbacks, and subgraph titles.
+
+- **Default color palette + recently used in the edit modal.** Fill / border color fields now show a curated 16-swatch default palette and a "Recently used" grid above the color picker. Click any swatch to set the color and mark "apply color". The recents list is seeded from the chart's own existing `style` / `linkStyle` / `classDef` declarations every time the modal opens — so opening an existing diagram with colours immediately surfaces those in **Recently used** — and grows as you apply new colours during the session (most-recent first, capped at 14, 3-char hex normalised so `#fff` and `#FFFFFF` dedupe).
 
 ## [2.3.0] — 2026-05-23
 
