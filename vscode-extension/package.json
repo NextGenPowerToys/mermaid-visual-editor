@@ -2,7 +2,7 @@
   "name": "mermaid-visual-editor",
   "displayName": "Mermaid NG — Visual Editor",
   "description": "WYSIWYG, drag-and-drop visual editor for AI-friendly Mermaid diagrams — what you see is what you get. For architects and developers — build, edit, and round-trip flowcharts, sequence, class, ER, and state diagrams across .md and .mmd files. Multi-sheet (draw.io style), fully offline (Mermaid 11.15.0 bundled), no network calls, no telemetry.",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "publisher": "NGPowerToys",
   "icon": "media/icon.png",
   "author": {

@@ -3,6 +3,12 @@ All notable changes to **Mermaid NG — Visual Editor** are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] — 2026-05-25
+
+### Added
+
+- **Per-node "+" button → shape picker for one-click flow building (flowchart only).** Hovering a flowchart node reveals a small green "+" button just below it (native "Add a connected node" tooltip). Click the "+" to open a 4-icon shape picker — Process box, Rounded, Circle, Decision — anchored under the button. Clicking a shape appends `${source} --> ${newDecl}` and Mermaid re-lays out the diagram automatically. Clicking outside the picker (or picking a shape) closes it. If the source node is inside a subgraph, the new node lands inside the same subgraph (matching drag-and-drop behaviour). Implements [#5](https://github.com/NextGenPowerToys/mermaid-visual-editor/issues/5).
+
 ## [2.3.0] — 2026-05-23
 
 ### Added

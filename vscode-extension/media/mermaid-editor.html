@@ -417,6 +417,86 @@
     stroke-width: 2px !important;
   }
 
+  /* Per-node overlay group rendered at the END of the SVG so the "+"
+     button + picker always sit on the top z-index, never obscured by
+     neighbouring nodes. Each child of the overlay corresponds to one
+     node and is positioned via getCTM() in SVG-root coords. */
+  .mv-node-overlay { pointer-events: none; }
+
+  /* Green "+" button. Hidden by default; visibility is JS-driven via
+     a .mv-active class (grace-timed in attachPlusButtons) so it
+     doesn't depend on g.node:hover — which would break because the
+     overlay element lives outside the node's subtree. */
+  .node-plus-btn {
+    opacity: 0;
+    transition: opacity 0.12s ease-out;
+    pointer-events: none;
+    cursor: pointer;
+  }
+  .node-plus-btn.mv-active,
+  .node-plus-btn.strip-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .node-plus-btn .plus-bg {
+    fill: #16a34a;          /* Tailwind green-600 — brighter than the old #2da44e */
+    stroke: #ffffff;
+    stroke-width: 2;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.22));
+    transition: fill 0.1s ease-out, transform 0.1s ease-out;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .node-plus-btn:hover .plus-bg,
+  .node-plus-btn.strip-open .plus-bg {
+    fill: #15803d;
+    transform: scale(1.08);
+  }
+  .node-plus-btn .plus-glyph {
+    stroke: #ffffff;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+  /* Invisible "bridge" rect — the cursor crosses it on its way from the
+     node body to the button, and its mouseenter fires the button's show
+     handler so visibility stays continuous. pointer-events:all because
+     the fill is fully transparent. */
+  .node-plus-btn .plus-bridge {
+    fill: rgba(0, 0, 0, 0);
+    pointer-events: all;
+  }
+
+  /* Picker strip: same JS visibility model as the "+" button. */
+  .node-altshapes-group {
+    opacity: 0;
+    transition: opacity 0.12s ease-out;
+    pointer-events: none;
+  }
+  .node-altshapes-group.mv-active,
+  .node-altshapes-group.strip-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .node-altshapes-group .alt-bg {
+    fill: #ffffff;
+    stroke: #d0d7de;
+    stroke-width: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+  }
+  @media (prefers-color-scheme: dark) {
+    .node-altshapes-group .alt-bg { fill: #2a2a2a; stroke: #444; }
+    .node-altshapes-group .alt-icon { stroke: #e6e6e6; }
+  }
+  .node-altshapes-group .alt-cell { cursor: pointer; }
+  .node-altshapes-group .alt-cell-bg { fill: transparent; }
+  .node-altshapes-group .alt-cell:hover .alt-cell-bg { fill: rgba(10,132,255,0.15); }
+  .node-altshapes-group .alt-icon {
+    fill: none;
+    stroke: #555;
+    stroke-width: 1.5;
+  }
+
   /* Floating overlay for the temporary edge-drag arrow */
   .edge-drag-overlay {
     position: fixed;
@@ -4510,6 +4590,9 @@ async function render() {
   if (inFlight) { pending = true; return; }
   inFlight = true;
   statusEl.textContent = 'rendering...';
+  // Tear down any open plus-button picker — the SVG (and the handle it
+  // anchored to) is about to be replaced.
+  if (typeof closeNodeTypePicker === 'function') closeNodeTypePicker();
   const code = codeEl.value;
   const id = 'm' + (++renderCount);
   try {
@@ -4534,6 +4617,7 @@ async function render() {
     canvasWrap.classList.toggle('graph-mode', isGraphDiagram());
     attachEdgeDragging();
     attachDoubleClick();
+    attachPlusButtons();
     if (!hasFittedOnce) {
       // First successful render: frame the whole diagram, centered.
       requestAnimationFrame(() => { fitToView(); hasFittedOnce = true; });
@@ -4906,6 +4990,358 @@ function attachEdgeDragging() {
     p.addEventListener('mousedown', onEdgeEndpointMouseDown);
   });
 }
+
+// ============================================================================
+// Per-node "+" button + alt-shape picker strip:
+//
+//  - Hover a flowchart node → a small green "+" button appears just below
+//    it. Click "+" to open a 4-icon shape picker (Process box, Rounded,
+//    Circle, Decision) anchored under the button. Clicking a shape appends
+//    `${source} --> ${newDecl}` so Mermaid re-lays out the diagram with
+//    the new connected node.
+//
+//  - Click outside the button / strip to close it. Picking a shape closes
+//    the strip implicitly via the re-render that follows.
+//
+//  Re-run after every render() since SVG content is replaced.
+// ============================================================================
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+// Look up the palette item that matches the given shape delimiters; returns
+// null if no flowchart-node item uses those delimiters (so the caller can
+// fall back to a synthetic same-shape node decl).
+function findFlowchartItemByShape(open, close) {
+  const spec = DIAGRAM_TYPES.flowchart;
+  for (const grp of spec.groups) {
+    for (const item of grp.items) {
+      if (item.kind === 'node' && item.shape[0] === open && item.shape[1] === close) {
+        return item;
+      }
+    }
+  }
+  return null;
+}
+
+// Small green "+" button anchored just below the node. Click toggles the
+// alt-shape picker strip for that node (sole add-affordance, replacing
+// the older 4-arrow design that proved confusing).
+//
+// Includes a transparent "bridge" rect that overlaps the node's bottom
+// edge so the cursor can travel from the node body to the button without
+// crossing an unhittable gap (which would end g.node:hover and hide the
+// button before it could be clicked).
+function makePlusButton(bbox, sourceId) {
+  const cx = bbox.x + bbox.width / 2;
+  const cy = bbox.y + bbox.height + 16;
+  const r = 11;
+  const g = document.createElementNS(SVG_NS, 'g');
+  g.classList.add('node-plus-btn');
+  g.setAttribute('data-source', sourceId);
+  g.setAttribute('data-cx', cx);
+  g.setAttribute('data-cy', cy);
+  // Native tooltip on hover.
+  const tip = document.createElementNS(SVG_NS, 'title');
+  tip.textContent = 'Add a connected node';
+  g.appendChild(tip);
+  // Bridge: spans from a few px inside the node's bottom edge down past
+  // the button. Generously wide so diagonal mouse moves don't slip out.
+  const bridgeW = Math.max(44, r * 4);
+  const bridgeTop = bbox.y + bbox.height - 3;
+  const bridgeBottom = cy + r + 2;
+  const bridge = document.createElementNS(SVG_NS, 'rect');
+  bridge.setAttribute('x', cx - bridgeW / 2);
+  bridge.setAttribute('y', bridgeTop);
+  bridge.setAttribute('width', bridgeW);
+  bridge.setAttribute('height', bridgeBottom - bridgeTop);
+  bridge.setAttribute('class', 'plus-bridge');
+  g.appendChild(bridge);
+  // Visible green circle.
+  const bg = document.createElementNS(SVG_NS, 'circle');
+  bg.setAttribute('cx', cx);
+  bg.setAttribute('cy', cy);
+  bg.setAttribute('r', r);
+  bg.setAttribute('class', 'plus-bg');
+  g.appendChild(bg);
+  // White "+" glyph drawn as two crossing lines.
+  const armLen = r * 0.5;
+  const h = document.createElementNS(SVG_NS, 'line');
+  h.setAttribute('x1', cx - armLen); h.setAttribute('y1', cy);
+  h.setAttribute('x2', cx + armLen); h.setAttribute('y2', cy);
+  h.setAttribute('class', 'plus-glyph');
+  g.appendChild(h);
+  const v = document.createElementNS(SVG_NS, 'line');
+  v.setAttribute('x1', cx); v.setAttribute('y1', cy - armLen);
+  v.setAttribute('x2', cx); v.setAttribute('y2', cy + armLen);
+  v.setAttribute('class', 'plus-glyph');
+  g.appendChild(v);
+  return g;
+}
+
+// Tiny shape icon drawn into the alt-shape strip. `kind` selects the glyph;
+// it should map to a flowchart node item via `shape`.
+function makeAltShapeIcon(kind, x, y, w, h) {
+  const el = document.createElementNS(SVG_NS, kind === 'circle' ? 'circle' : kind === 'diamond' ? 'polygon' : 'rect');
+  el.classList.add('alt-icon');
+  if (kind === 'rect') {
+    el.setAttribute('x', x); el.setAttribute('y', y);
+    el.setAttribute('width', w); el.setAttribute('height', h);
+  } else if (kind === 'rounded') {
+    el.setAttribute('x', x); el.setAttribute('y', y);
+    el.setAttribute('width', w); el.setAttribute('height', h);
+    el.setAttribute('rx', Math.min(w, h) * 0.35);
+    el.setAttribute('ry', Math.min(w, h) * 0.35);
+  } else if (kind === 'circle') {
+    el.setAttribute('cx', x + w / 2); el.setAttribute('cy', y + h / 2);
+    el.setAttribute('r', Math.min(w, h) / 2);
+  } else if (kind === 'diamond') {
+    const cx = x + w / 2, cy = y + h / 2;
+    el.setAttribute('points',
+      `${cx},${y} ${x + w},${cy} ${cx},${y + h} ${x},${cy}`);
+  }
+  return el;
+}
+
+// The alt-shape strip: 4 shape choices the user can pick instead of the
+// source node's shape. Each cell triggers addConnectedNodeOfShape().
+function buildAltShapeStrip(bbox, sourceId) {
+  const cellW = 28, cellH = 24, gap = 3, pad = 5;
+  const choices = [
+    { kind: 'rect',    label: 'Process box', shape: ['[', ']']   },
+    { kind: 'rounded', label: 'Rounded',     shape: ['(', ')']   },
+    { kind: 'circle',  label: 'Circle',      shape: ['((', '))'] },
+    { kind: 'diamond', label: 'Decision',    shape: ['{', '}']   },
+  ];
+  const stripW = pad * 2 + choices.length * cellW + (choices.length - 1) * gap;
+  const stripH = pad * 2 + cellH;
+  const cx = bbox.x + bbox.width / 2;
+  const sx = cx - stripW / 2;
+  // Place just below the "+" button: button is centered at
+  // bbox.bottom + 16 with r = 11 (bottom at +27), then a few px gap.
+  const sy = bbox.y + bbox.height + 34;
+  const wrap = document.createElementNS(SVG_NS, 'g');
+  wrap.classList.add('node-altshapes-group');
+  // Background "pill"
+  const bg = document.createElementNS(SVG_NS, 'rect');
+  bg.setAttribute('x', sx);
+  bg.setAttribute('y', sy);
+  bg.setAttribute('width',  stripW);
+  bg.setAttribute('height', stripH);
+  bg.setAttribute('rx', 6); bg.setAttribute('ry', 6);
+  bg.classList.add('alt-bg');
+  wrap.appendChild(bg);
+  // Cells
+  choices.forEach((c, i) => {
+    const x = sx + pad + i * (cellW + gap);
+    const y = sy + pad;
+    const cell = document.createElementNS(SVG_NS, 'g');
+    cell.classList.add('alt-cell');
+    cell.setAttribute('data-shape', c.shape.join(''));
+    const cellBg = document.createElementNS(SVG_NS, 'rect');
+    cellBg.setAttribute('x', x); cellBg.setAttribute('y', y);
+    cellBg.setAttribute('width', cellW); cellBg.setAttribute('height', cellH);
+    cellBg.setAttribute('rx', 4); cellBg.setAttribute('ry', 4);
+    cellBg.classList.add('alt-cell-bg');
+    cell.appendChild(cellBg);
+    // Icon (inset)
+    const ix = x + 4, iy = y + 4, iw = cellW - 8, ih = cellH - 8;
+    cell.appendChild(makeAltShapeIcon(c.kind, ix, iy, iw, ih));
+    // Tooltip via <title>
+    const t = document.createElementNS(SVG_NS, 'title');
+    t.textContent = c.label;
+    cell.appendChild(t);
+    cell.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+    cell.addEventListener('click', (e) => {
+      e.stopPropagation(); e.preventDefault();
+      // After a pick the strip should not reappear on the next render.
+      stripOpenNodeId = null;
+      addConnectedNodeOfShape(sourceId, c.shape);
+    });
+    wrap.appendChild(cell);
+  });
+  return wrap;
+}
+
+function addConnectedNodeOfShape(sourceId, shape, anchorEl) {
+  // Prefer the palette item that matches the shape (gives a nice default
+  // label like "Process box" or "Decision"). Otherwise synthesize one.
+  const matched = findFlowchartItemByShape(shape[0], shape[1]);
+  const item = matched || {
+    kind: 'node',
+    shape,
+    label: 'Node',
+    icon: shape[0] + ' ' + shape[1],
+  };
+  const snippet = snippetForDrop(item, sourceId);
+  // Keep the new node inside the source's subgraph (if any).
+  const sourceNodeEl = anchorEl
+    ? anchorEl.closest('g.node, g[id^="flowchart-"]')
+    : null;
+  let subgraph = null;
+  if (sourceNodeEl) {
+    const r = sourceNodeEl.getBoundingClientRect();
+    subgraph = matchSubgraph(clusterAtPoint(r.left + r.width / 2,
+                                            r.top  + r.height / 2));
+  }
+  appendCode(snippet, subgraph);
+}
+
+function attachPlusButtons() {
+  // Build tag so reloads are easy to verify in the webview console.
+  if (!window.__mvNodePlusBuildLogged) {
+    console.log('[mermaid-visual-editor] node-plus-button build active (v2.4.0, overlay)');
+    window.__mvNodePlusBuildLogged = true;
+  }
+  // Only meaningful for graph-style diagrams; for now we wire it up only
+  // for flowchart since snippetForDrop's auto-connect path targets it.
+  if (!isGraphDiagram()) return;
+  if (typeSelect.value !== 'flowchart') return;
+  const svg = outputEl.querySelector('svg');
+  if (!svg) return;
+
+  // Top-z-index overlay: a single <g> appended to the SVG root, holding
+  // every node's "+" button and picker strip. By living outside g.node's
+  // subtree it can't be obscured by neighbouring nodes. Positioning uses
+  // getCTM() so each child sits exactly where its node renders.
+  let overlay = svg.querySelector(':scope > .mv-node-overlay');
+  if (!overlay) {
+    overlay = document.createElementNS(SVG_NS, 'g');
+    overlay.classList.add('mv-node-overlay');
+  }
+  // Always re-append so the overlay is the LAST child of the SVG.
+  svg.appendChild(overlay);
+  while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
+
+  const HIDE_DELAY = 200; // grace period to bridge mouseleave→mouseenter
+
+  const nodeSel = 'g.node, g.nodes .node, g[id^="flowchart-"]';
+  const seen = new Set();
+  const decoratedOverlays = [];
+  svg.querySelectorAll(nodeSel).forEach(nodeEl => {
+    if (seen.has(nodeEl)) return;
+    seen.add(nodeEl);
+    // Skip cluster / subgraph wrappers — connecting from a container is ambiguous.
+    if (nodeEl.classList && nodeEl.classList.contains('cluster')) return;
+
+    const info = nodeIdFromElement(nodeEl);
+    if (!info) return;
+    const nodeId = info.id;
+
+    let bbox;
+    try { bbox = nodeEl.getBBox(); } catch (e) { return; }
+    if (!bbox.width || !bbox.height) return;
+
+    // Map the node's local bbox into SVG-root coords (the overlay's space).
+    const ctm = nodeEl.getCTM();
+    if (!ctm) return;
+    const p1 = svg.createSVGPoint(); p1.x = bbox.x; p1.y = bbox.y;
+    const p2 = svg.createSVGPoint(); p2.x = bbox.x + bbox.width; p2.y = bbox.y + bbox.height;
+    const tl = p1.matrixTransform(ctm);
+    const br = p2.matrixTransform(ctm);
+    const absBbox = {
+      x: Math.min(tl.x, br.x),
+      y: Math.min(tl.y, br.y),
+      width: Math.abs(br.x - tl.x),
+      height: Math.abs(br.y - tl.y),
+    };
+
+    const plusBtn = makePlusButton(absBbox, nodeId);
+    const strip = buildAltShapeStrip(absBbox, nodeId);
+    overlay.appendChild(plusBtn);
+    overlay.appendChild(strip);
+
+    // JS-driven hover with a grace timer so the brief gap between
+    // mouseleave on the node and mouseenter on the button (or vice-
+    // versa) doesn't make the button blink.
+    let hideTimer = null;
+    const show = () => {
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      plusBtn.classList.add('mv-active');
+      strip.classList.add('mv-active');
+    };
+    const hide = () => {
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => {
+        hideTimer = null;
+        if (plusBtn.classList.contains('strip-open')) return; // sticky while open
+        plusBtn.classList.remove('mv-active');
+        strip.classList.remove('mv-active');
+      }, HIDE_DELAY);
+    };
+    nodeEl.addEventListener('mouseenter', show);
+    nodeEl.addEventListener('mouseleave', hide);
+    plusBtn.addEventListener('mouseenter', show);
+    plusBtn.addEventListener('mouseleave', hide);
+    strip.addEventListener('mouseenter', show);
+    strip.addEventListener('mouseleave', hide);
+
+    plusBtn.addEventListener('mousedown', (e) => {
+      // Stop only when the visible circle is clicked, so drag-to-connect
+      // initiated near the node's edge (bridge area) still works.
+      if (e.target.classList && e.target.classList.contains('plus-bg')) {
+        e.stopPropagation();
+      }
+    });
+    plusBtn.addEventListener('click', (e) => {
+      if (!e.target.classList || !e.target.classList.contains('plus-bg')) return;
+      e.stopPropagation();
+      e.preventDefault();
+      const wasOpen = plusBtn.classList.contains('strip-open');
+      // Close any other open strips first.
+      overlay.querySelectorAll('.strip-open').forEach(el => el.classList.remove('strip-open'));
+      if (!wasOpen) {
+        plusBtn.classList.add('strip-open');
+        strip.classList.add('strip-open');
+        stripOpenNodeId = nodeId;
+      } else {
+        stripOpenNodeId = null;
+      }
+    });
+
+    decoratedOverlays.push({ nodeId, plusBtn, strip });
+  });
+
+  // Re-apply the open-strip state if the user re-rendered while a strip
+  // was open (e.g. after toggling a sheet). Match by node id.
+  if (stripOpenNodeId) {
+    const match = decoratedOverlays.find(d => d.nodeId === stripOpenNodeId);
+    if (match) {
+      match.plusBtn.classList.add('strip-open', 'mv-active');
+      match.strip.classList.add('strip-open', 'mv-active');
+    } else {
+      stripOpenNodeId = null;
+    }
+  }
+}
+
+// Which node's "+" picker is currently open. Survives re-renders because
+// attachPlusButtons re-applies the class above.
+let stripOpenNodeId = null;
+function closeAllStrips() {
+  const svg = outputEl.querySelector('svg');
+  if (svg) {
+    svg.querySelectorAll('.mv-node-overlay .strip-open').forEach(el => {
+      el.classList.remove('strip-open');
+      // mv-active stays — if cursor is over the strip/button it'll be
+      // reapplied; otherwise the hover grace timer will clear it.
+      el.classList.remove('mv-active');
+    });
+  }
+  stripOpenNodeId = null;
+}
+
+// Click anywhere that isn't the + button or its strip closes the picker.
+// Picking a shape inside the strip triggers a re-render that rebuilds
+// the overlay; stripOpenNodeId is cleared by the shape-cell handler path.
+document.addEventListener('click', (e) => {
+  if (!stripOpenNodeId) return;
+  if (!outputEl.contains(e.target)) { closeAllStrips(); return; }
+  if (e.target.closest('.node-plus-btn, .node-altshapes-group')) return;
+  closeAllStrips();
+});
+
+// Kept as a no-op so existing call sites (the render() teardown hook below)
+// don't break — there's no popup to close in the arrow-based UX.
+function closeNodeTypePicker() { /* no-op */ }
 
 // ============================================================================
 // Double-click to rename a node, label an edge, or rename a subgraph.
