@@ -595,6 +595,7 @@
     color: var(--text-tertiary);
   }
   .modal-field input[type="text"],
+  .modal-field textarea,
   .modal-field select {
     background: var(--bg);
     color: var(--text-primary);
@@ -604,8 +605,17 @@
     font-size: 13px;
     font-family: inherit;
     width: 100%;
+    box-sizing: border-box;
+  }
+  .modal-field textarea {
+    line-height: 1.4;
+    resize: vertical;
+    min-height: 34px;
+    max-height: 160px;
+    overflow: auto;
   }
   .modal-field input[type="text"]:focus,
+  .modal-field textarea:focus,
   .modal-field select:focus { outline: none; border-color: var(--border-active); }
   .color-row { display: flex; align-items: center; gap: 10px; }
   .color-row input[type="color"] {
@@ -5379,9 +5389,59 @@ function renameTokenEverywhere(oldId, newId) {
   codeEl.value = codeEl.value.replace(re, (full, pre) => pre + newId);
 }
 
-// Quote a label safely for use inside a shape (escape stray double quotes).
+// Encode a label as it should appear inside a Mermaid token: real newlines
+// are written as the two-character escape `\n` (which Mermaid renders as a
+// line break inside quoted labels). Internal double-quotes are folded to
+// single quotes to avoid prematurely terminating the quoted form.
+function encodeMermaidLabel(text) {
+  return String(text)
+    .replace(/\r\n?/g, '\n')   // normalise CRLF / CR → LF first
+    .replace(/"/g, "'")
+    .replace(/\n/g, '\\n');
+}
+
+// Inverse of encodeMermaidLabel: turn the literal `\n` back into a real
+// newline so the textarea pre-fills with the multi-line label intact.
+function decodeMermaidLabel(text) {
+  return String(text).replace(/\\n/g, '\n');
+}
+
+// True if `text` (after trim) contains characters that require the quoted
+// label form (newlines or characters Mermaid would otherwise treat as
+// shape delimiters / operators).
+function labelNeedsQuotes(text) {
+  return /[\n\\"\[\](){}|<>]/.test(String(text));
+}
+
+// Quote a label safely for use inside a shape. Always wraps in `"..."`
+// (Mermaid is happy with quoted simple labels too) so multi-line labels
+// containing `\n` always parse correctly.
 function quoteLabel(text) {
-  return '"' + String(text).trim().replace(/"/g, "'") + '"';
+  return '"' + encodeMermaidLabel(String(text).trim()) + '"';
+}
+
+// Read the current label for a flowchart-style node from the source code
+// (so multi-line labels stored as the `\n` escape round-trip back into the
+// modal textarea as real newlines). Returns null if no declaration exists.
+function getNodeLabelFromCode(id) {
+  const code = codeEl.value;
+  const re = new RegExp('(^|[^\\w])(' + escForRegex(id) + ')\\s*([\\[\\(\\{])');
+  const m = re.exec(code);
+  if (!m) return null;
+  const declStart = m.index + m[1].length + m[2].length;
+  let i = declStart;
+  const openChars = '([{';
+  while (i < code.length && openChars.includes(code[i])) i++;
+  const open = code.slice(declStart, i);
+  const close = open.split('').reverse().map(c =>
+    c === '[' ? ']' : c === '(' ? ')' : c === '{' ? '}' : c).join('');
+  const closeIdx = code.indexOf(close, i);
+  if (closeIdx === -1) return null;
+  let label = code.slice(i, closeIdx);
+  // Strip an optional surrounding "..." (used for labels with line breaks
+  // or other reserved characters).
+  label = label.replace(/^"([\s\S]*)"$/, '$1');
+  return decodeMermaidLabel(label);
 }
 
 // Set (or insert) the label of the node declaration for `id`.
@@ -5408,9 +5468,10 @@ function setNodeLabel(id, label) {
   // grammar of the current diagram so we don't corrupt non-flowchart code.
   const t = (codeEl.value.trim().split(/\s|\n/)[0] || '').toLowerCase();
   if (t.startsWith('classdiagram')) {
-    appendCode(`class ${id}["${label.replace(/"/g, "'")}"]`);
+    appendCode(`class ${id}["${encodeMermaidLabel(label)}"]`);
   } else if (t.startsWith('statediagram')) {
-    appendCode(`${id} : ${label}`);
+    const enc = encodeMermaidLabel(label);
+    appendCode(`${id} : ${labelNeedsQuotes(label) ? `"${enc}"` : enc}`);
   } else if (t.startsWith('erdiagram')) {
     // ER entities can't carry a free-text label; leave the id as-is.
     scheduleRender();
@@ -6013,11 +6074,16 @@ function setEdge(source, target, opts) {
     if (!m) return false;
     const op = buildConnector(opts);
     const lbl = (opts.label || '').trim();
+    // Encode real newlines as the Mermaid `\n` escape so multi-line labels
+    // round-trip through the code. Wrap in quotes when the label contains
+    // anything that needs quoting (newlines, |, etc.).
+    const encoded = encodeMermaidLabel(lbl);
+    const formatted = labelNeedsQuotes(lbl) ? `"${encoded}"` : encoded;
     // Class relations carry no free-text label in Mermaid syntax.
     const allowPipe = !usesColonLabel && fam !== 'class';
-    const pipe = (allowPipe && lbl) ? `|${lbl}|` : '';
+    const pipe = (allowPipe && lbl) ? `|${formatted}|` : '';
     const tail = usesColonLabel
-      ? (lbl ? ` : ${lbl}` : '')
+      ? (lbl ? ` : ${formatted}` : '')
       : (m[6] || '');           // keep any pre-existing trailing text untouched
     const replacement =
       `${m[1]}${m[2]}${m[3]}${op}${pipe}${m[4]}${m[5]}${tail}`;
@@ -6074,8 +6140,13 @@ function readEdge(source, target) {
     const op = m[2];
     const pipeLabel = m[4];
     const colonLabel = m[6];
-    const label = (pipeLabel != null ? pipeLabel
-                  : colonLabel != null ? colonLabel : '').trim();
+    const rawLabel = (pipeLabel != null ? pipeLabel
+                    : colonLabel != null ? colonLabel : '').trim();
+    // Strip surrounding "..." (used when the label contains \n or other
+    // special chars) and decode the two-char `\n` escape back to a real
+    // newline so the modal textarea pre-fills with multi-line text.
+    const unquoted = rawLabel.replace(/^"([\s\S]*)"$/, '$1');
+    const label = decodeMermaidLabel(unquoted);
 
     if (fam === 'class') {
       return { relation: parseClassRel(op),
@@ -6171,9 +6242,24 @@ function fieldText(labelText, value) {
   const lab = document.createElement('label');
   lab.textContent = labelText;
   wrap.appendChild(lab);
-  const inp = document.createElement('input');
-  inp.type = 'text';
+  // Textarea so the user can press Enter to add line breaks. Submit on
+  // Cmd/Ctrl+Enter (plain Enter inserts a newline). The textarea auto-
+  // grows up to its CSS max-height; past that, it scrolls.
+  const inp = document.createElement('textarea');
+  inp.rows = 1;
   inp.value = value || '';
+  const autoSize = () => {
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight + 2, 160) + 'px';
+  };
+  inp.addEventListener('input', autoSize);
+  setTimeout(autoSize, 0);
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      modalApply.click();
+    }
+  });
   wrap.appendChild(inp);
   return { wrap, get: () => inp.value, focus: () => { inp.focus(); inp.select(); } };
 }
@@ -6445,7 +6531,14 @@ function attachDoubleClick() {
       // to the id.
       let current;
       if (fam === 'flowchart' || fam === 'other') {
-        current = (nodeHit.el.textContent || '').trim() || nodeHit.id;
+        // Prefer the source declaration so multi-line labels (stored as
+        // the `\n` escape) round-trip back as real newlines into the
+        // textarea. Fall back to textContent for nodes that only appear
+        // in an edge (no `Id[label]` declaration in the code).
+        const fromCode = getNodeLabelFromCode(nodeHit.id);
+        current = (fromCode != null && fromCode.length)
+          ? fromCode
+          : ((nodeHit.el.textContent || '').trim() || nodeHit.id);
       } else {
         current = nodeHit.id;
       }
@@ -6515,7 +6608,8 @@ function attachDoubleClick() {
     // Subgraph?
     const sg = matchSubgraph(clusterInfoFromElement(e.target));
     if (sg) {
-      const curTitle = sg.title || sg.id;
+      // Decode `\n` so a multi-line title pre-fills as actual newlines.
+      const curTitle = decodeMermaidLabel(sg.title || sg.id);
       const st = readElementStyle(sg.id);
       const fName = fieldText('Name / title', curTitle);
       const fBorder = fieldSelect('Border line', [
