@@ -1,0 +1,45 @@
+{
+  "name": "mermaid-ng-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server exposing the Mermaid NG Visual Editor's diagram capabilities — list, read, edit, validate, and create Mermaid diagrams in Markdown / .mmd files — to any MCP-compatible AI agent. Fully offline, no telemetry.",
+  "type": "module",
+  "bin": {
+    "mermaid-ng-mcp": "./src/index.js"
+  },
+  "main": "./src/index.js",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node ./src/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mermaid",
+    "diagram",
+    "ai",
+    "llm",
+    "claude",
+    "ngpowertoys"
+  ],
+  "author": {
+    "name": "NGPowerToys",
+    "email": "nextgenpowertoys@gmail.com",
+    "url": "https://github.com/NextGenPowerToys"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NextGenPowerToys/mermaid-visual-editor.git",
+    "directory": "mcp-server"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  }
+}

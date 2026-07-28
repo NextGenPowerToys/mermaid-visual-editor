@@ -41,9 +41,21 @@ mermaid-visual-editor/
 │       ├── mermaid-editor.html the self-contained editor (Mermaid 11.15.0 bundled)
 │       ├── icon.png            marketplace icon (256×256)
 │       └── icon-hd.png         hi-res hero image for the README
+├── mcp-server/                 MCP server — same diagram engine, for AI agents
+│   ├── src/                    stdio server + framework-free block parser
+│   └── README.md               setup & tool reference
 ├── LICENSE                     MIT
 └── THIRD-PARTY-LICENSES        Mermaid MIT notice
 ```
+
+## For AI agents — MCP server
+
+A companion [**MCP server**](mcp-server/README.md) exposes the same
+list / read / edit / validate / create diagram capabilities to any
+MCP-compatible agent (Claude Desktop, Claude Code, Cursor, …). It reuses the
+extension's exact block-parsing and round-trip logic, so agent edits preserve
+surrounding prose and fence style — and it stays **fully offline, no telemetry**.
+See [`mcp-server/README.md`](mcp-server/README.md) to get started.
 
 ## Install
 
